@@ -3,11 +3,25 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
+import java.util.Vector;
 
 public class Server {
+//	private static Vector<Table> availableTables: Record of tables available for users to join
+	private static Vector<Account> accountRegistry;
+	private static Vector<TestMessage> messageLog;
+	private static ServerSocket server;
+	private static int standAt;
+	
+	public void collectMessage(TestMessage message) {
+		messageLog.add(message);
+	}
+	
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         // Create a ServerSock on localhost:7777
-    	ServerSocket server = null;
+    	accountRegistry = null;
+    	messageLog = null;
+    	server = null;
+    	standAt = 17;
 
 		try {
 
@@ -49,6 +63,10 @@ public class Server {
     
     private static class ClientHandler implements Runnable {
     	private final Socket clientSocket;
+    	private Account account;
+    	private boolean stoodOrBust;
+//    	private Table seatedAt;
+
 
     	// Constructor to receive client connection
     	public ClientHandler(Socket socket) throws IOException
@@ -116,5 +134,76 @@ public class Server {
     			}
     		}
     	}
+    	public void lookForTable() {
+    	}
+    	public void makeTable() {
+    		
+    	}
+    	public void timeOut() {
+    		
+    	}
+    	public boolean register(String username, String password, String credentials) {
+    		Account newAccount = new Account(username, password, credentials);
+    		return newAccount.validate(username, password, credentials);
+    	}
+    	public boolean logIn(String username, String password, String credentials) {
+    		Account matchingAccount = new Account(username, password, credentials);
+    		return matchingAccount.validate(username, password, credentials);
+    	}
+    	public double getPlayerBalance() {
+    		return account.getBalance();
+    	}
+    	public double chargePlayerBalance(double currency) {
+    		account.modifyBalance(currency);
+    		return account.getBalance();
+    	}
+    	public double addToPlayerBalance(double currency) {
+    		account.modifyBalance(currency);
+    		return account.getBalance();
+    	}
+    	/*
+    	public void informClientOfError(ErrorType errorType) {
+    		
+    	}
+    	*/
+    	public void askForBets() {
+    		
+    	}
+    	public void removeFromTable() {
+    		
+    	}
+    	public void askForAction() {
+    		
+    	}
+    	public void hitRequest() {
+    		
+    	}
+    	public void standRequest() {
+    		
+    	}
+    	/*
+    	public void addCard(Card card) {
+    		
+    	}
+    	*/
+    	public void restartGame() {
+    		
+    	}
+    	public void getGameUsers() {
+    		
+    	}
+    	public void getGameCards() {
+    		
+    	}
+    	public void checkRanks() {
+    		
+    	}
+    	public void save() {
+    		
+    	}
+    	public void getStoodOrBust() {
+    		
+    	}
+
     }
 }

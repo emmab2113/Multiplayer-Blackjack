@@ -10,7 +10,7 @@ public class Account {
 	private double activeBet;
 	private boolean signedIn;
 	
-	public void Account(String username, String password, String credentials) {
+	public Account(String username, String password, String credentials) {
 		this.username = username;
 		this.password = password;
 		this.credentials = credentials;
@@ -19,7 +19,7 @@ public class Account {
 		activeBet = 0;
 		signedIn = false;
 	}
-	public void Account(String username, String password, String credentials, double balance, int timeOut) {
+	public Account(String username, String password, String credentials, double balance, int timeOut) {
 		this.username = username;
 		this.password = password;
 		this.credentials = credentials;
