@@ -1,2 +1,0 @@
-Player123,Password,0,10000,0
-Dealer123,Password,1,0,0
