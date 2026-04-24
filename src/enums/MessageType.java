@@ -1,0 +1,30 @@
+package enums;
+
+public enum MessageType {
+	LogIn,
+	LogOut,
+	TableJoin,
+	TableLeave,
+	Register,
+	Registered,
+	BalanceRequest,
+	BalanceView,
+	DepositRequest,
+	Deposit,
+	WithdrawRequest,
+	Withdraw,
+	Error,
+	TimeOut,
+	RequestBet,
+	Bet,
+	GameAction,
+	Hit,
+	Stand,
+	RenderCard,
+	RenderPlayer,
+	Connected,
+	Disconnected,
+	CancelRequest,
+	SuccessfulLogin,
+	Test
+}
