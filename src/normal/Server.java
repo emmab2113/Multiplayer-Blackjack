@@ -3,6 +3,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Vector;
 
 public class Server {
@@ -24,7 +25,29 @@ public class Server {
     	standAt = 17;
 
 		try {
-
+			File registryFile = new File("accounts.txt");
+			Scanner registryLoader = new Scanner(registryFile);
+			while(registryLoader.hasNextLine()) {
+				String accountData = registryLoader.nextLine();
+				String[] accountDetails = new String[5];
+				int detailCounter = 0;
+				String detail = "";
+				for (int i = 0; i < accountData.length(); i++) {
+					if (accountData.charAt(i) == ',') {
+						accountDetails[detailCounter] = detail;
+						detail = "";
+						detailCounter++;
+					}
+					else {
+						detail += accountData.charAt(i);
+					}
+				}
+				accountDetails[detailCounter] = detail;
+				detail = "";
+				detailCounter++;
+				accountRegistry.add(new Account(accountDetails[0],accountDetails[1],accountDetails[2],
+						Double.parseDouble(accountDetails[3]),Integer.parseInt(accountDetails[4])));
+			}
 			// server is listening on port 1234
 			server = new ServerSocket(1234);
 			server.setReuseAddress(true);
@@ -144,10 +167,13 @@ public class Server {
     	}
     	public boolean register(String username, String password, String credentials) {
     		Account newAccount = new Account(username, password, credentials);
+    		accountRegistry.add(newAccount);
+    		account = newAccount;
     		return newAccount.validate(username, password, credentials);
     	}
     	public boolean logIn(String username, String password, String credentials) {
     		Account matchingAccount = new Account(username, password, credentials);
+    		account = matchingAccount;
     		return matchingAccount.validate(username, password, credentials);
     	}
     	public double getPlayerBalance() {
@@ -201,8 +227,8 @@ public class Server {
     	public void save() {
     		
     	}
-    	public void getStoodOrBust() {
-    		
+    	public boolean getStoodOrBust() {
+    		return stoodOrBust;
     	}
 
     }
