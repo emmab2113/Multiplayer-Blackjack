@@ -216,10 +216,12 @@ public class Server {
     			TestMessage line = new TestMessage();
 				out.writeObject(new TestMessage("GameAction","success","NA"));
 				if ((line = (TestMessage) in.readObject()) != null) {
-					if (line.getType().compareTo("login") == 0) {
-						out.writeObject(new TestMessage("login","success","success"));
+					if (line.getType().compareTo("stand") == 0) {
+						standRequest();
 					}
-					account.setBet(42);
+					if (line.getType().compareTo("hit") == 0) {
+						hitRequest();
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -240,10 +242,32 @@ public class Server {
     		account.resetCardsAndBet();
     	}
     	public void getGameUsers() {
-    		
+    		Boolean[] isSeated = new Boolean[6];
+    		String seatedUsers = "";
+    		for (Boolean seat: isSeated) {
+    			if (seat) {
+    				seatedUsers += "1";
+    			}
+    			seatedUsers += "0";
+    		}
+    		try {
+				out.writeObject(new TestMessage("RenderPlayer","success",seatedUsers));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
     	}
     	public void getGameCards() {
-    		
+    		String allRanks = "";
+    		Vector<Card> hand = account.getCards(); // Temporary, should pull from table
+    		for (Card card: hand) {
+    			allRanks += card.getSuit();
+    			allRanks += card.getRank();
+    		}
+    		try {
+				out.writeObject(new TestMessage("RenderCard","success",allRanks));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
     	}
     	public void checkRanks() {
     		int aces = 0;

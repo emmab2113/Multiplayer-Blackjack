@@ -6,7 +6,7 @@ import 	org.junit.jupiter.api.Test;
 
 import MBServer.Account;
 
-public class AccountTest {
+public class AccountTest5 {
 	
 	@Test
 	public void simpleConstructorTest(){
