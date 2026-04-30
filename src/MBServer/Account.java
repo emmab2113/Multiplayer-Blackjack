@@ -1,12 +1,14 @@
 package MBServer;
 
+import java.util.Vector;
+
 public class Account {
 	private String username;
 	private String password;
 	private String credentials;
 	private double balance;
 	private int timeOut;
-//	private Vector<Card> cards;
+	private Vector<Card> cards;
 	private double activeBet;
 	private boolean signedIn;
 	
@@ -51,16 +53,17 @@ public class Account {
 	}
 	public void resetCardsAndBet() {
 		activeBet = 0;
+		cards.clear();
 	}
-	/*
+	
 	public void receiveCard(Card card) {
-		
+		cards.add(card);
 	}
 	
-	public Card getCards() {
-	
+	public Vector<Card> getCards() {
+		return cards;
 	}
-	*/
+	
 	public boolean validate(String username, String password, String credentials) {
 		return (this.username == username && this.password == password && this.credentials == credentials && !signedIn);
 	}

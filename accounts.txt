@@ -1,0 +1,2 @@
+player123,password,0,100,0
+dealer456,wordpass,1,0,0

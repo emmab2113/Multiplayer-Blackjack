@@ -7,7 +7,7 @@ import java.util.Scanner;
 import java.util.Vector;
 
 public class Server {
-//	private static Vector<Table> availableTables: Record of tables available for users to join
+	private static Vector<Table> availableTables;
 	private static Vector<Account> accountRegistry;
 	private static Vector<TestMessage> messageLog;
 	private static ServerSocket server;
@@ -19,8 +19,8 @@ public class Server {
 	
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         // Create a ServerSock on localhost:7777
-    	accountRegistry = null;
-    	messageLog = null;
+    	accountRegistry = new Vector<Account>();
+    	messageLog = new Vector<TestMessage>();
     	server = null;
     	standAt = 17;
 
@@ -88,7 +88,9 @@ public class Server {
     	private final Socket clientSocket;
     	private Account account;
     	private boolean stoodOrBust;
-//    	private Table seatedAt;
+    	ObjectOutputStream out = null;
+		ObjectInputStream in = null;
+    	private Table seatedAt;
 
 
     	// Constructor to receive client connection
@@ -101,8 +103,6 @@ public class Server {
     	public void run()
     	{
     		// Initialize variables for client communication
-    		ObjectOutputStream out = null;
-    		ObjectInputStream in = null;
     		boolean login = false;
     		try {
     				
@@ -158,12 +158,15 @@ public class Server {
     		}
     	}
     	public void lookForTable() {
+    		for (int i = 0; i < availableTables.size(); i++) {
+    			seatedAt = availableTables.get(i);
+    		}
     	}
     	public void makeTable() {
-    		
+    		availableTables.add(null);
     	}
     	public void timeOut() {
-    		
+    		account.setTimeOut(300);
     	}
     	public boolean register(String username, String password, String credentials) {
     		Account newAccount = new Account(username, password, credentials);
@@ -193,13 +196,36 @@ public class Server {
     	}
     	*/
     	public void askForBets() {
-    		
+    		try {
+    			TestMessage line = new TestMessage();
+				out.writeObject(new TestMessage("Bet","success","NA"));
+				if ((line = (TestMessage) in.readObject()) != null) {
+					account.setBet(42);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
     	}
     	public void removeFromTable() {
-    		
+    		seatedAt = null;
     	}
     	public void askForAction() {
-    		
+    		try {
+    			TestMessage line = new TestMessage();
+				out.writeObject(new TestMessage("GameAction","success","NA"));
+				if ((line = (TestMessage) in.readObject()) != null) {
+					if (line.getType().compareTo("login") == 0) {
+						out.writeObject(new TestMessage("login","success","success"));
+					}
+					account.setBet(42);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
     	}
     	public void hitRequest() {
     		
@@ -207,13 +233,11 @@ public class Server {
     	public void standRequest() {
     		
     	}
-    	/*
     	public void addCard(Card card) {
-    		
+    		account.receiveCard(card);
     	}
-    	*/
     	public void restartGame() {
-    		
+    		account.resetCardsAndBet();
     	}
     	public void getGameUsers() {
     		
@@ -222,10 +246,66 @@ public class Server {
     		
     	}
     	public void checkRanks() {
-    		
+    		int aces = 0;
+    		int score = 0;
+    		String curRank = "";
+    		Vector<Card> hand = account.getCards();
+    		for (Card card: hand) {
+    			curRank = card.getRank();
+    			if (curRank == "J" || curRank == "Q" || curRank == "K") {
+    				score += 10;
+    			}
+    			else if (curRank == "A"){
+    				score += 11;
+    				aces++;
+    			}
+    			else {
+    				score += Integer.parseInt(card.getRank());;
+    			}
+    			if (score > 21) {
+    				while (aces > 0 && score > 21) {
+    					score -= 10;
+    					aces -= 1;
+    				}
+    				if (score > 21) {
+    					stoodOrBust = true;
+    				}
+    			}
+    		}
     	}
     	public void save() {
-    		
+    		for (Account registered: accountRegistry) {
+    			if (account == registered) {
+    				File registryFile = new File("accounts.txt");
+    				Scanner registryLoader = null;
+					try {
+						registryLoader = new Scanner(registryFile);
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					}
+    				while(registryLoader.hasNextLine()) {
+    					String accountData = registryLoader.nextLine();
+    					String[] accountDetails = new String[5];
+    					int detailCounter = 0;
+    					String detail = "";
+    					for (int i = 0; i < accountData.length(); i++) {
+    						if (accountData.charAt(i) == ',') {
+    							accountDetails[detailCounter] = detail;
+    							detail = "";
+    							detailCounter++;
+    						}
+    						else {
+    							detail += accountData.charAt(i);
+    						}
+    					}
+    					accountDetails[detailCounter] = detail;
+    					detail = "";
+    					detailCounter++;
+    					accountRegistry.add(new Account(accountDetails[0],accountDetails[1],accountDetails[2],
+    							Double.parseDouble(accountDetails[3]),Integer.parseInt(accountDetails[4])));
+    				}
+    			}
+    		}
     	}
     	public boolean getStoodOrBust() {
     		return stoodOrBust;
