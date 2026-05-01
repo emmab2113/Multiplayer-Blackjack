@@ -32,7 +32,7 @@ public class Account {
 		
 	}
 	public boolean modifyBalance(double balance) {
-		if (balance > this.balance) {
+		if (balance * -1 > this.balance) {
 			return false;
 		}
 		this.balance += balance;
@@ -45,13 +45,14 @@ public class Account {
 		return (timeOut > 0);
 	}
 	public boolean setBet(double bet) {
-		if (modifyBalance(bet)) {
+		if (modifyBalance(bet * -1) && bet > 0) {
 			activeBet = bet;
 			return true;
 		}
 		return false;
 	}
 	public void resetCardsAndBet() {
+		modifyBalance(activeBet * 2);
 		activeBet = 0;
 		cards.clear();
 	}
@@ -65,7 +66,12 @@ public class Account {
 	}
 	
 	public boolean validate(String username, String password, String credentials) {
-		return (this.username == username && this.password == password && this.credentials == credentials && !signedIn);
+		Boolean isValid = (this.username == username && this.password == password && this.credentials == credentials && !signedIn);
+		if (isValid) {
+			signedIn = true;
+			return true;
+		}
+		return false;
 	}
 	public double getBalance() {
 		return balance;

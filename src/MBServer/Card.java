@@ -16,7 +16,7 @@ public class Card {
 	}
 	
 	public String getSuit() {
-		return this.rank;
+		return this.suit;
 	}
 	
 }
