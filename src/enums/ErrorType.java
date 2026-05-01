@@ -1,5 +1,5 @@
 package enums;
 
-enum ErrorType{
+public enum ErrorType{
 	TypeError
 }

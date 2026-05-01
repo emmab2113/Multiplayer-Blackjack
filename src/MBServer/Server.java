@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
 
+import enums.ErrorType;
+import enums.TestMessage;
+import MBClient.Client;
+
 public class Server {
 	private static Vector<Table> availableTables;
 	private static Vector<Account> accountRegistry;
@@ -190,11 +194,15 @@ public class Server {
     		account.modifyBalance(currency);
     		return account.getBalance();
     	}
-    	/*
+    	
     	public void informClientOfError(ErrorType errorType) {
-    		
+    		try {
+				out.writeObject(new TestMessage("Bet","success","NA"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
     	}
-    	*/
+    	
     	public void askForBets() {
     		try {
     			TestMessage line = new TestMessage();

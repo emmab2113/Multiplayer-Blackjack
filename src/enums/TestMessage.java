@@ -1,4 +1,5 @@
-package MBServer;
+package enums;
+
 import java.io.Serializable;
 
 public class TestMessage implements Serializable {
