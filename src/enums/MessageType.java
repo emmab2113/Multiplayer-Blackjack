@@ -2,17 +2,17 @@ package enums;
 
 public enum MessageType {
 	LogIn,
-	LogOut,
-	TableJoin,
-	TableLeave,
 	Register,
-	Registered,
+	LogOut,	
 	BalanceRequest,
 	BalanceView,
 	DepositRequest,
-	Deposit,
+	DepositBalance,
 	WithdrawRequest,
-	Withdraw,
+	WithdrawBalance,
+	GetTables,
+	TableJoin,
+	TableLeave,
 	Error,
 	TimeOut,
 	RequestBet,
@@ -25,6 +25,5 @@ public enum MessageType {
 	Connected,
 	Disconnected,
 	CancelRequest,
-	SuccessfulLogin,
 	Test
 }
