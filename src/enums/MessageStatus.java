@@ -1,7 +1,7 @@
 package enums;
 
 public enum MessageStatus {
-	Sent,
+	Pending,
 	Success, 
 	Fail,
 	Test
