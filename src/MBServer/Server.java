@@ -90,8 +90,8 @@ public class Server {
     	private final Socket clientSocket;
     	private Account account;
     	private boolean stoodOrBust;
-    	ObjectOutputStream out = null;
-		ObjectInputStream in = null;
+    	private ObjectOutputStream out = null;
+		private ObjectInputStream in = null;
     	private Table seatedAt;
 
 
@@ -338,10 +338,8 @@ public class Server {
 			}
     	}
     	public void removeFromTable() {
+    		seatedAt.queueLeave(this);
     		seatedAt = null;
-    		if (true) {
-    			timeOut();
-    		}
     	}
     	public void askForAction() {
     		try {
@@ -398,11 +396,7 @@ public class Server {
     			allRanks += card.getSuit();
     			allRanks += card.getRank();
     		}
-    		try {
-				out.writeObject(new Message("RenderCard","success",allRanks));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+    		writeMessage(new Message("RenderCard","success",allRanks));
     	}
     	public void checkRanks() {
     		int aces = 0;

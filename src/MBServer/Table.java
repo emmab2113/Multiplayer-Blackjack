@@ -1,30 +1,133 @@
 package MBServer;
+import java.util.Vector;
 
-import MBClient.Client;
-
-public class Table{
-	private Server.ClientHandler dealer;
-	private Server.ClientHandler[] players;
-	private Card[] cardHistory;
-	private static int counter = 0;
+public class Table {
 	
-	public Table(){
-		players = new Server.ClientHandler[6];
-		cardHistory = new Card[6];
+	private Server.ClientHandler[] players;
+	private Server.ClientHandler dealer;
+	private CardDeck shoe;
+	private int timer;
+	private boolean dealerLeave;
+	private boolean gameActive;
+	private int playersTurn;
+	private Vector<Card> cardsDrawn;
+	
+	public Table() {
+		this.players = new Server.ClientHandler[6];
 		
-		for (int i = 0; i < 6; i++) {
-			cardHistory[i] = new Card("A","Clubs");
+		this.shoe = new CardDeck(6);
+		this.shoe.shuffle();
+		this.cardsDrawn = new Vector<>();
+		
+		this.gameActive = false;
+		this.dealerLeave = false;
+		this.timer = 0;
+		this.playersTurn = 0;
+	}
+	
+	public void startGame() {
+		this.gameActive = true;
+		for (Server.ClientHandler player : this.players) {
+			if (player != null) {
+				this.players[this.playersTurn].addCard(drawCard());
+				this.players[this.playersTurn].addCard(drawCard());
+			}
+		}
+		this.dealer.addCard(drawCard());
+		this.dealer.addCard(drawCard());
+		this.timer = 42;
+	}
+	
+	public void nextTurn () {
+		if (playerStoodOrBust() && this.players[this.playersTurn] != null) {
+			this.timer = 42;
+			this.players[this.playersTurn].askForAction();
+		}
+		this.playersTurn++;
+		if (this.playersTurn == this.players.length) {
+			this.playersTurn = 0;
+		}
+	}
+	
+	public void endGame() {
+		this.shoe.reset();
+		this.shoe.shuffle();
+		this.cardsDrawn.clear();
+		this.playersTurn = 0;
+		this.timer = 42;
+		
+		this.gameActive = false;
+		if (this.dealerLeave && this.dealer != null) {
+			removeUserFromTable(this.dealer);
 		}
 	}
 	
 	public Card drawCard() {
-		Card card = cardHistory[counter];
-		counter++;
-		return card;
+		Card pulled = this.shoe.pullCard();
+		if (pulled != null) {
+			this.cardsDrawn.add(pulled);
+		}
+		return pulled;
+	}
+	
+	public int getPlayerCount() {
+		int count = 0;
+		for (Server.ClientHandler player : this.players) {
+			if (player != null) {
+				count++;
+			}
+		}
+		return count;
+	}
+	
+	public boolean hasDealer() {
+		return this.dealer != null;
 	}
 	
 	public void addUserToTable(Server.ClientHandler user) {
-		players[0] = user;
-		user.askForAction();
+		for (int i = 0; i < this.players.length; i++) {
+			if (this.players[i] == null) {
+				this.players[i] = user;
+				return;
+			}
+		}
+	}
+	
+	public void queueLeave(Server.ClientHandler user) {
+		if (user == dealer && gameActive) {
+			dealerLeave = true;
+		}
+		else {
+			removeUserFromTable(user);
+		}
+	}
+	
+	private void removeUserFromTable(Server.ClientHandler user) {
+		if (user == dealer) {
+			this.dealer = null;
+			return;
+		}
+		for (int i = 0; i < this.players.length; i++) {
+			if (user == this.players[i]) {
+				this.players[i] = null;
+				return;
+			}
+		}
+	}
+
+	public boolean[] getVacancies() {
+		boolean[] vacancies = new boolean[this.players.length];
+		for (int i = 0; i < this.players.length; i++) {
+			vacancies[i] = (this.players[i] == null);
+		}
+		return vacancies;
+	}
+	
+	public Vector<Card> getCardsDrawn() {
+		return this.cardsDrawn;
+	}
+	
+	public boolean playerStoodOrBust() {
+		return this.players[this.playersTurn].getStoodOrBust();
 	}
 }
