@@ -204,7 +204,7 @@ public class Server {
     						detail = "";
     						detailCounter++;
     						if (register(accountDetails[0], accountDetails[1], accountDetails[2])) {
-    							out.writeObject(new Message("Registered","success","NA"));
+    							writeMessage(new Message("Registered","success","NA"));
     						}
     						else {
     							informClientOfError(ErrorType.TypeError);
@@ -212,19 +212,19 @@ public class Server {
     					}
     					else if (line.getType().compareTo("BalanceRequest") == 0) {
 	    					String playerBalance = String.valueOf(getPlayerBalance());
-	    					out.writeObject(new Message("BalanceView","success", playerBalance));
+	    					writeMessage(new Message("BalanceView","success", playerBalance));
 	    				}
     					else if (line.getType().compareTo("DepositRequest") == 0) {
 	    					if (addToPlayerBalance(Double.parseDouble(line.getText()))) {
 	    						String playerBalance = String.valueOf(getPlayerBalance());
-	        					out.writeObject(new Message("Deposit","success", playerBalance));
+	    						writeMessage(new Message("Deposit","success", playerBalance));
 	    					}
 	    					informClientOfError(ErrorType.TypeError);
 	    				}
 	    				else if (line.getType().compareTo("WithdrawRequest") == 0) {
 	    					if (addToPlayerBalance(Double.parseDouble(line.getText()))) {
 	    						String playerBalance = String.valueOf(getPlayerBalance());
-	        					out.writeObject(new Message("Withdraw","success", playerBalance));
+	    						writeMessage(new Message("Withdraw","success", playerBalance));
 	    					}
 	    					informClientOfError(ErrorType.TypeError);
 	    				}
@@ -232,7 +232,7 @@ public class Server {
     				else {	// Only listen for login TestMessages if client is not logged in
     					if (line.getType().compareTo("login") == 0) {
     						login = true;
-    						out.writeObject(new Message("login","success","success"));
+    						writeMessage(new Message("login","success","success"));
     					}
     				}
     				collectMessage(line);
@@ -285,24 +285,24 @@ public class Server {
     				return false;
     			}
     		}
-    		File registryFile = new File("accounts.txt");
-    		Scanner registryLoader = null;
+    		
 			BufferedWriter registryUpdater = null;
 			try {
-				registryLoader = new Scanner(registryFile);
-				registryUpdater = new BufferedWriter(new FileWriter("accounts.txt"));
-				while (registryLoader.hasNextLine()) {
-					registryUpdater.write(registryLoader.nextLine());
-				}
-				registryUpdater.write(username + "," + password + "," + credentials + ",0.00,0");
+				registryUpdater = new BufferedWriter(new FileWriter("accounts.txt", true));
+				registryUpdater.newLine();
+				registryUpdater.append(username + "," + password + "," + credentials + ",0.00,0");
+				
+				registryUpdater.close();
+				
+				Account newAccount = new Account(username, password, credentials);
+	    		accountRegistry.add(newAccount);
+	    		account = newAccount;
+	    		return newAccount.validate(username, password, credentials);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
-			Account newAccount = new Account(username, password, credentials);
-    		accountRegistry.add(newAccount);
-    		account = newAccount;
-    		return newAccount.validate(username, password, credentials);
+
+    		return false;
     	}
     	
     	public boolean logIn(String username, String password, String credentials) {
@@ -362,10 +362,12 @@ public class Server {
 				e.printStackTrace();
 			}
     	}
+    	
     	public void removeFromTable() {
     		seatedAt.queueLeave(this);
     		seatedAt = null;
     	}
+    	
     	public void askForAction() {
     		try {
     			Message line = new Message();
@@ -384,21 +386,26 @@ public class Server {
 				e.printStackTrace();
 			}
     	}
+    	
     	public void hitRequest() {
     		Card card = seatedAt.drawCard();
     		account.receiveCard(card);
     		checkRanks();
     	}
+    	
     	public void standRequest() {
     		stoodOrBust = true;
     		writeMessage(new Message("Hit","success","You have stood"));
     	}
+    	
     	public void addCard(Card card) {
     		account.receiveCard(card);
     	}
+    	
     	public void restartGame() {
     		account.resetCardsAndBet();
     	}
+    	
     	public void getGameUsers() {
     		Boolean[] isSeated = new Boolean[6];
     		String seatedUsers = "";
@@ -414,6 +421,7 @@ public class Server {
 				e.printStackTrace();
 			}
     	}
+    	
     	public void getGameCards() {
     		String allRanks = "";
     		Vector<Card> hand = seatedAt.getCardsDrawn();
@@ -505,10 +513,13 @@ public class Server {
 				newRegistry += accountData;
 			}
 			try {
+				registryLoader.close();
 				registryUpdater.write(newRegistry);
+				registryUpdater.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
     	}
     	
     	public boolean getStoodOrBust() {

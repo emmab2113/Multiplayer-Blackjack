@@ -3,6 +3,14 @@ package enums;
 import java.io.Serializable;
 
 public class Message implements Serializable {
+	private static int Counter;
+	private String ID;
+	private boolean serverSent;
+	private ErrorType error;
+	private MessageType messageType;
+	private MessageStatus messageStatus;
+	private String info;
+	
     protected final String type;
     protected final String status;
     protected final String text;
@@ -18,6 +26,18 @@ public class Message implements Serializable {
         this.status = status;
         this.text = text;
     }
+    
+    public Message(boolean serverSent, ErrorType error, MessageType messageType, MessageStatus messageStatus, String info) {
+    	this.serverSent = serverSent;
+    	this.error = error;
+    	this.messageType = messageType;
+    	this.messageStatus = messageStatus;
+    	this.info = info;
+    	
+    	this.type = "Undefined";
+        this.status = "Undefined";
+        this.text = "Undefined";
+    }
 
     public String getType(){
     	return type;
@@ -30,5 +50,24 @@ public class Message implements Serializable {
     public String getText(){
     	return text;
     }
-
+    
+    public boolean getServerSent(){
+    	return serverSent;
+    }
+    
+    public ErrorType getError(){
+    	return error;
+    }
+    
+    public MessageType getMessageType(){
+    	return messageType;
+    }
+    
+    public MessageStatus getMessageStatus(){
+    	return messageStatus;
+    }
+    
+    public String getInfo(){
+    	return info;
+    }
 }
