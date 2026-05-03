@@ -18,6 +18,7 @@ public class Account {
 		this.credentials = credentials;
 		balance = 0;
 		timeOut = 0;
+		cards = new Vector<Card>();
 		activeBet = 0;
 		signedIn = false;
 	}
@@ -27,6 +28,7 @@ public class Account {
 		this.credentials = credentials;
 		this.balance = balance;
 		this.timeOut = timeOut;
+		cards = new Vector<Card>();
 		activeBet = 0;
 		signedIn = false;
 		
@@ -78,7 +80,7 @@ public class Account {
 	public double getBalance() {
 		return balance;
 	}
-	public boolean SignOut() {
+	public boolean signOut() {
 		signedIn = false;
 		return true;
 	}

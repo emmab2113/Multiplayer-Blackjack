@@ -12,7 +12,7 @@ import java.util.Scanner;
 import java.util.Vector;
 
 import enums.ErrorType;
-import enums.TestMessage;
+import enums.Message;
 import MBServer.Server;
 
 
@@ -21,7 +21,7 @@ public class Client {
 	private boolean[] seatedPlayers;
 	private String IPAddress;
 	private String username;
-	private Vector<TestMessage> messageLog;
+	private Vector<Message> messageLog;
 	
 	public static void main(String[] args) {
 		try {
@@ -43,12 +43,12 @@ public class Client {
 	        
 	        // Initialize variables for communicating with server
 	        String clientCom;
-	        TestMessage serverCom;
+	        Message serverCom;
 	        boolean login = false;
 	        
 	        // Send login message and await response
-	        objectOutputStream.writeObject(new TestMessage("login", "pending", "Undefined"));
-	        serverCom = ((TestMessage) objectInputStream.readObject());
+	        objectOutputStream.writeObject(new Message("login", "pending", "Undefined"));
+	        serverCom = ((Message) objectInputStream.readObject());
 	        
 	        // Communicate until server connection is severed
 	        while(true) {     	
@@ -56,12 +56,12 @@ public class Client {
 	        		System.out.println("Send a message to the server to capitalize (type 'logout' to exit): ");
 	        		clientCom = sc.nextLine();	// Type contents of text message to server (or request to logout)
 	        		if (clientCom.compareTo("logout") == 0) {	// Logout, sever server connection, and exit program
-	        			objectOutputStream.writeObject(new TestMessage("logout","pending","Undefined"));
+	        			objectOutputStream.writeObject(new Message("logout","pending","Undefined"));
 	        		}
 	        		else {	// Sent text message to server
-	        			objectOutputStream.writeObject(new TestMessage("text","pending",clientCom));
+	        			objectOutputStream.writeObject(new Message("text","pending",clientCom));
 	        		}
-	        		serverCom = ((TestMessage) objectInputStream.readObject());	// Await response
+	        		serverCom = ((Message) objectInputStream.readObject());	// Await response
 	        		if (serverCom.getType().compareTo("text") == 0 && serverCom.getStatus().compareTo("success") == 0) {
 	        			System.out.println(serverCom.getText());	// Print capitalized text
 	        		}
@@ -75,8 +75,8 @@ public class Client {
 	        			login = true;	// On successful connect, enable text and logout messages
 	        		}
 	        		else {
-	        			objectOutputStream.writeObject(new TestMessage("login", "pending", "Undefined"));
-	        	        serverCom = ((TestMessage) objectInputStream.readObject());	// Repeatedly attempt to connect until successful
+	        			objectOutputStream.writeObject(new Message("login", "pending", "Undefined"));
+	        	        serverCom = ((Message) objectInputStream.readObject());	// Repeatedly attempt to connect until successful
 	        		}
 	        	}
 	        }

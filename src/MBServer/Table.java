@@ -3,12 +3,13 @@ package MBServer;
 import MBClient.Client;
 
 public class Table{
-	private Server.ClientHandler[] patrons;
+	private Server.ClientHandler dealer;
+	private Server.ClientHandler[] players;
 	private Card[] cardHistory;
 	private static int counter = 0;
 	
 	public Table(){
-		patrons = new Server.ClientHandler[6];
+		players = new Server.ClientHandler[6];
 		cardHistory = new Card[6];
 		
 		for (int i = 0; i < 6; i++) {
@@ -20,5 +21,10 @@ public class Table{
 		Card card = cardHistory[counter];
 		counter++;
 		return card;
+	}
+	
+	public void addUserToTable(Server.ClientHandler user) {
+		players[0] = user;
+		user.askForAction();
 	}
 }

@@ -2,18 +2,18 @@ package enums;
 
 import java.io.Serializable;
 
-public class TestMessage implements Serializable {
+public class Message implements Serializable {
     protected final String type;
     protected final String status;
     protected final String text;
 
-    public TestMessage(){
+    public Message(){
         this.type = "Undefined";
         this.status = "Undefined";
         this.text = "Undefined";
     }
 
-    public TestMessage(String type, String status, String text){
+    public Message(String type, String status, String text){
     	this.type = type;
         this.status = status;
         this.text = text;

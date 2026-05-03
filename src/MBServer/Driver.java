@@ -12,9 +12,16 @@ import java.util.Scanner;
 import java.util.Vector;
 
 import enums.ErrorType;
-import enums.TestMessage;
+import enums.Message;
 import MBServer.Server;
+/*
+READ FIRST
 
+1. type SignIn
+2. type MakeTable
+3. type TableJoin
+4. follow prompts
+*/
 
 public class Driver {
 	public static void main(String[] args) {
@@ -37,47 +44,62 @@ public class Driver {
 	        
 	        // Initialize variables for communicating with server
 	        String clientCom;
-	        TestMessage serverCom;
+	        Message serverCom;
 	        boolean login = false;
 	        boolean expectMessage = false;
 	        
 	        // Send login message and await response
-	        objectOutputStream.writeObject(new TestMessage("login", "pending", "Undefined"));
-	        serverCom = ((TestMessage) objectInputStream.readObject());
+	        objectOutputStream.writeObject(new Message("login", "pending", "Undefined"));
+	        serverCom = ((Message) objectInputStream.readObject());
 	        
 	        // Communicate until server connection is severed
 	        while(true) {     	
 	        	if (login) {	// Connected to server
-	        		System.out.println("Send a message to the server to capitalize (type 'logout' to exit): ");
+	        		System.out.println(serverCom.getType() + ": " + serverCom.getStatus());
 	        		clientCom = sc.nextLine();	// Type contents of text message to server (or request to logout)
 	        		expectMessage = false;
-	        		if (clientCom.compareTo("logout") == 0) {	// Logout, sever server connection, and exit program
-	        			objectOutputStream.writeObject(new TestMessage("logout","pending","Undefined"));
+	        		if (clientCom.compareTo("LogOut") == 0) {	// Logout, sever server connection, and exit program
+	        			objectOutputStream.writeObject(new Message("logout","pending","Undefined"));
 	        			expectMessage = true;
 	        		}
 	        		else if (clientCom.compareTo("TableJoin") == 0) {
-	        			objectOutputStream.writeObject(new TestMessage("TableJoin","pending","Undefined"));
+	        			objectOutputStream.writeObject(new Message("TableJoin","pending","Undefined"));
+	        			expectMessage = true;
 	        		}
-	        		else if (clientCom.compareTo("TableLeave") == 0) {
-	        			objectOutputStream.writeObject(new TestMessage("TableLeave","pending","Undefined"));
+	        		else if (clientCom.compareTo("TableLeave") == 0) {	// Not functional
+	        			objectOutputStream.writeObject(new Message("TableLeave","pending","Undefined"));
 	        		}
-	        		else if (clientCom.compareTo("MakeTable") == 0) {
-	        			objectOutputStream.writeObject(new TestMessage("MakeTable","pending","Undefined"));
+	        		else if (clientCom.compareTo("MakeTable") == 0) {	// Not functional
+	        			objectOutputStream.writeObject(new Message("MakeTable","pending","Undefined"));
 	        		}
-	        		else if (clientCom.compareTo("SignIn") == 0) {
-	        			objectOutputStream.writeObject(new TestMessage("SignIn","pending","player123,password,0"));
+	        		else if (clientCom.compareTo("SignIn") == 0) {	// Not functional
+	        			objectOutputStream.writeObject(new Message("SignIn","pending","player123,password,0"));
 	        			expectMessage = true;
 	        		}
 	        		else {	// Sent text message to server
-	        			objectOutputStream.writeObject(new TestMessage("text","pending",clientCom));
+	        			objectOutputStream.writeObject(new Message("text","pending",clientCom));
 	        			expectMessage = true;
 	        		}
 	        		if (expectMessage) {
-	        			serverCom = ((TestMessage) objectInputStream.readObject());	// Await response
+	        			serverCom = ((Message) objectInputStream.readObject());	// Await response
 		        		if (serverCom.getType().compareTo("text") == 0 && serverCom.getStatus().compareTo("success") == 0) {
 		        			System.out.println(serverCom.getText());	// Print capitalized text
 		        		}
-		        		else if (serverCom.getType().compareTo("logout") == 0 && serverCom.getStatus().compareTo("success") == 0){
+		        		
+		        		else if (serverCom.getType().compareTo("GameAction") == 0){
+		        			System.out.println(serverCom.getText());
+		        			clientCom = sc.nextLine();
+		        			if (clientCom.compareTo("Hit") == 0) {
+			        			objectOutputStream.writeObject(new Message("Hit","pending","Undefined"));
+			        		}
+		        			else if (clientCom.compareTo("Stand") == 0) {
+		        				objectOutputStream.writeObject(new Message("Stand","pending","Undefined"));
+		        			}
+		        			serverCom = ((Message) objectInputStream.readObject());
+		        			System.out.println(serverCom.getText());
+		        		}
+		        		
+		        		else if (serverCom.getType().compareTo("Disconnected") == 0){
 		        			login = false;
 		        			return;	// Exit after logging out program
 		        		}
@@ -91,8 +113,8 @@ public class Driver {
 	        			login = true;	// On successful connect, enable text and logout messages
 	        		}
 	        		else {
-	        			objectOutputStream.writeObject(new TestMessage("login", "pending", "Undefined"));
-	        	        serverCom = ((TestMessage) objectInputStream.readObject());	// Repeatedly attempt to connect until successful
+	        			objectOutputStream.writeObject(new Message("login", "pending", "Undefined"));
+	        	        serverCom = ((Message) objectInputStream.readObject());	// Repeatedly attempt to connect until successful
 	        		}
 	        	}
 	        }

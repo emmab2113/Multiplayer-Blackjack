@@ -7,13 +7,13 @@ import java.util.Scanner;
 import java.util.Vector;
 
 import enums.ErrorType;
-import enums.TestMessage;
+import enums.Message;
 import MBClient.Client;
 
 public class Server {
 	private static Vector<Table> availableTables;
 	private static Vector<Account> accountRegistry;
-	private static Vector<TestMessage> messageLog;
+	private static Vector<Message> messageLog;
 	private static ServerSocket server;
 	private static int standAt;
 	
@@ -21,7 +21,7 @@ public class Server {
         // Create a ServerSock on localhost:7777
     	availableTables = new Vector<Table>();
     	accountRegistry = new Vector<Account>();
-    	messageLog = new Vector<TestMessage>();
+    	messageLog = new Vector<Message>();
     	server = null;
     	standAt = 17;
 
@@ -108,7 +108,7 @@ public class Server {
 			out = new ObjectOutputStream(outBase);
 	        in = new ObjectInputStream(inBase);
 	        
-	        out.writeObject(new TestMessage("Connected","success","NA"));
+	        out.writeObject(new Message("Connected","success","NA"));
     	}
 
     	// Run on instantiation
@@ -119,31 +119,31 @@ public class Server {
     		try {
 
     	        // Communicate until client connection is severed
-    			TestMessage line;
-    			while ((line = (TestMessage) in.readObject()) != null) {
+    			Message line;
+    			while ((line = (Message) in.readObject()) != null) {
     				if (login) {
-    					if (line.getType().compareTo("logout") == 0) {	// Sever client connection on logout
+    					if (line.getType().compareTo("LogOut") == 0) {	// Sever client connection on logout
     						login = false;
-    						out.writeObject(new TestMessage("logout","success","success"));
+    						out.writeObject(new Message("Disconnected","success","NA"));
     						clientSocket.close();
     						return;
     					}
-    					else if (line.getType().compareTo("text") == 0) {	// Capitalize contents of text TestMessage
+    					else if (line.getType().compareTo("text") == 0) {	// Capitalize contents of text Message
     						String capitalInput = line.getText();			// Return new text to client
     						capitalInput = capitalInput.toUpperCase();
-    						out.writeObject(new TestMessage("text","success",capitalInput));
+    						out.writeObject(new Message("text","success",capitalInput));
     						
     					}
-    					else if (line.getType().compareTo("TableJoin") == 0) {	// Capitalize contents of text TestMessage
+    					else if (line.getType().compareTo("TableJoin") == 0) {	// Capitalize contents of text Message
     						lookForTable();
     					}
-    					else if (line.getType().compareTo("TableLeave") == 0) {	// Capitalize contents of text TestMessage
+    					else if (line.getType().compareTo("TableLeave") == 0) {	// Capitalize contents of text Message
     						removeFromTable();
     					}
-    					else if (line.getType().compareTo("MakeTable") == 0) {	// Capitalize contents of text TestMessage
+    					else if (line.getType().compareTo("MakeTable") == 0) {	// Capitalize contents of text Message
     						makeTable();
     					}
-    					else if (line.getType().compareTo("SignIn") == 0) {	// Capitalize contents of text TestMessage
+    					else if (line.getType().compareTo("SignIn") == 0) {	// Capitalize contents of text Message
     						String accountInfo = line.getText();
     						String[] accountDetails = new String[3];
     						int detailCounter = 0;
@@ -165,17 +165,73 @@ public class Server {
     						detail = "";
     						detailCounter++;
     						if(logIn(accountDetails[0], accountDetails[1], accountDetails[2])) {
-    							out.writeObject(new TestMessage("SignIn","success","NA"));
+    							out.writeObject(new Message("SignIn","success","NA"));
     						}
     						else {
     							informClientOfError(ErrorType.TypeError);
     						}
     					}
+    					else if (line.getType().compareTo("SignOut") == 0) {	// Capitalize contents of text Message
+    						account.signOut();
+    						out.writeObject(new Message("SignOut","success","NA"));
+    					}
+    					else if (line.getType().compareTo("Register") == 0) {	// Capitalize contents of text Message
+    						String accountInfo = line.getText();
+    						String[] accountDetails = new String[3];
+    						int detailCounter = 0;
+    						String detail = "";
+    						for (int i = 0; i < accountInfo.length(); i++) {
+    							if (accountInfo.charAt(i) == ',') {
+    								if (detailCounter == 2) {
+    									break;
+    								}
+    								accountDetails[detailCounter] = detail;
+    								detail = "";
+    								detailCounter++;
+    							}
+    							else {
+    								detail += accountInfo.charAt(i);
+    							}
+    						}
+    						accountDetails[detailCounter] = detail;
+    						detail = "";
+    						detailCounter++;
+    						if(logIn(accountDetails[0], accountDetails[1], accountDetails[2])) {
+    							out.writeObject(new Message("SignIn","success","NA"));
+    						}
+    						else {
+    							informClientOfError(ErrorType.TypeError);
+    						}
+    						if (register(accountDetails[0], accountDetails[1], accountDetails[2])) {
+    							out.writeObject(new Message("Registered","success","NA"));
+    						}
+    						else {
+    							informClientOfError(ErrorType.TypeError);
+    						}
+    					}
+    					else if (line.getType().compareTo("BalanceRequest") == 0) {
+	    					String playerBalance = String.valueOf(getPlayerBalance());
+	    					out.writeObject(new Message("BalanceView","success", playerBalance));
+	    				}
+    					else if (line.getType().compareTo("DepositRequest") == 0) {
+	    					if (addToPlayerBalance(Double.parseDouble(line.getText()))) {
+	    						String playerBalance = String.valueOf(getPlayerBalance());
+	        					out.writeObject(new Message("Deposit","success", playerBalance));
+	    					}
+	    					informClientOfError(ErrorType.TypeError);
+	    				}
+	    				else if (line.getType().compareTo("WithdrawRequest") == 0) {
+	    					if (addToPlayerBalance(Double.parseDouble(line.getText()))) {
+	    						String playerBalance = String.valueOf(getPlayerBalance());
+	        					out.writeObject(new Message("Withdraw","success", playerBalance));
+	    					}
+	    					informClientOfError(ErrorType.TypeError);
+	    				}
     				}
     				else {	// Only listen for login TestMessages if client is not logged in
     					if (line.getType().compareTo("login") == 0) {
     						login = true;
-    						out.writeObject(new TestMessage("login","success","success"));
+    						out.writeObject(new Message("login","success","success"));
     					}
     				}
     				collectMessage(line);
@@ -207,10 +263,9 @@ public class Server {
     		}
     		
     		// Join table
-//    		writeMessage(new TestMessage("GetTable","success","table info"));
-    		for (int i = 0; i < availableTables.size(); i++) {
-    			seatedAt = availableTables.get(i);
-    		}
+//    		writeMessage(new Message("GetTable","success","table info"));
+    		seatedAt = availableTables.get(0);
+    		seatedAt.addUserToTable(this);
     	}
     	public void makeTable() {
     		// Add a new table
@@ -220,6 +275,12 @@ public class Server {
     		account.setTimeOut(300);
     	}
     	public boolean register(String username, String password, String credentials) {
+    		for (Account existingAccount: accountRegistry) {
+    			if (existingAccount.validate(username, password, credentials)) {
+    				existingAccount.signOut();
+    				return false;
+    			}
+    		}
     		Account newAccount = new Account(username, password, credentials);
     		accountRegistry.add(newAccount);
     		account = newAccount;
@@ -237,26 +298,30 @@ public class Server {
     	public double getPlayerBalance() {
     		return account.getBalance();
     	}
-    	public double chargePlayerBalance(double currency) {
-    		account.modifyBalance(currency);
-    		return account.getBalance();
+    	public boolean chargePlayerBalance(double currency) {
+    		if (currency > 0) {
+    			return false;
+    		}
+    		return account.modifyBalance(currency);
     	}
-    	public double addToPlayerBalance(double currency) {
-    		account.modifyBalance(currency);
-    		return account.getBalance();
+    	public boolean addToPlayerBalance(double currency) {
+    		if (currency < 0) {
+    			return false;
+    		}
+    		return account.modifyBalance(currency);
     	}
     	
     	public void informClientOfError(ErrorType errorType) {
     		if (errorType == ErrorType.TypeError) {
-				writeMessage(new TestMessage("Error","failure","timedOutResponse"));
+				writeMessage(new Message("Error","failure","timedOutResponse"));
 			}
     	}
     	
     	public void askForBets() {
     		try {
-    			TestMessage line = new TestMessage();
-				out.writeObject(new TestMessage("RequestBet","success","NA"));
-				while ((line = (TestMessage) in.readObject()) != null) {
+    			Message line = new Message();
+				out.writeObject(new Message("RequestBet","success","NA"));
+				while ((line = (Message) in.readObject()) != null) {
 					if (line.getType().compareTo("Bet") == 0) {
 						if (account.setBet(Double.parseDouble(line.getText()))) {
 							return;
@@ -280,13 +345,13 @@ public class Server {
     	}
     	public void askForAction() {
     		try {
-    			TestMessage line = new TestMessage();
-				out.writeObject(new TestMessage("GameAction","success","NA"));
-				if ((line = (TestMessage) in.readObject()) != null) {
-					if (line.getType().compareTo("stand") == 0) {
+    			Message line = new Message();
+				out.writeObject(new Message("GameAction","success","Choose Hit or Stand"));
+				if ((line = (Message) in.readObject()) != null) {
+					if (line.getType().compareTo("Stand") == 0) {
 						standRequest();
 					}
-					if (line.getType().compareTo("hit") == 0) {
+					if (line.getType().compareTo("Hit") == 0) {
 						hitRequest();
 					}
 				}
@@ -299,9 +364,11 @@ public class Server {
     	public void hitRequest() {
     		Card card = seatedAt.drawCard();
     		account.receiveCard(card);
+    		checkRanks();
     	}
     	public void standRequest() {
     		stoodOrBust = true;
+    		writeMessage(new Message("Hit","success","You have stood"));
     	}
     	public void addCard(Card card) {
     		account.receiveCard(card);
@@ -319,7 +386,7 @@ public class Server {
     			seatedUsers += "0";
     		}
     		try {
-				out.writeObject(new TestMessage("RenderPlayer","success",seatedUsers));
+				out.writeObject(new Message("RenderPlayer","success",seatedUsers));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -332,7 +399,7 @@ public class Server {
     			allRanks += card.getRank();
     		}
     		try {
-				out.writeObject(new TestMessage("RenderCard","success",allRanks));
+				out.writeObject(new Message("RenderCard","success",allRanks));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -341,6 +408,7 @@ public class Server {
     		int aces = 0;
     		int score = 0;
     		String curRank = "";
+    		String results = "";
     		Vector<Card> hand = account.getCards();
     		for (Card card: hand) {
     			curRank = card.getRank();
@@ -352,18 +420,22 @@ public class Server {
     				aces++;
     			}
     			else {
-    				score += Integer.parseInt(card.getRank());;
-    			}
-    			if (score > 21) {
-    				while (aces > 0 && score > 21) {
-    					score -= 10;
-    					aces -= 1;
-    				}
-    				if (score > 21) {
-    					stoodOrBust = true;
-    				}
+    				score += Integer.parseInt(card.getRank());
     			}
     		}
+    		results += "Your hand has a score of " + score + "\n";
+    		results += "You have " + aces + " in your hand\n";
+    		if (score > 21) {
+				while (aces > 0 && score > 21) {
+					score -= 10;
+					aces -= 1;
+				}
+				if (score > 21) {
+					stoodOrBust = true;
+					results += "You have busted";
+				}
+			}
+    		writeMessage(new Message("Hit","success",results));
     	}
     	public void save() { // Non-functioning at this moment
     		File registryFile = new File("accounts.txt");
@@ -414,10 +486,10 @@ public class Server {
     	public boolean getStoodOrBust() {
     		return stoodOrBust;
     	}
-    	public synchronized void collectMessage(TestMessage message) {
+    	public synchronized void collectMessage(Message message) {
     		messageLog.add(message);
     	}
-    	public void writeMessage(TestMessage message) {
+    	public void writeMessage(Message message) {
     		// write and record messages sent to client
     		try {
 				out.writeObject(message);
