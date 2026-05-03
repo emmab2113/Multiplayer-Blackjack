@@ -17,12 +17,9 @@ public class Server {
 	private static ServerSocket server;
 	private static int standAt;
 	
-	public void collectMessage(TestMessage message) {
-		messageLog.add(message);
-	}
-	
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         // Create a ServerSock on localhost:7777
+    	availableTables = new Vector<Table>();
     	accountRegistry = new Vector<Account>();
     	messageLog = new Vector<TestMessage>();
     	server = null;
@@ -52,6 +49,7 @@ public class Server {
 				accountRegistry.add(new Account(accountDetails[0],accountDetails[1],accountDetails[2],
 						Double.parseDouble(accountDetails[3]),Integer.parseInt(accountDetails[4])));
 			}
+			
 			// server is listening on port 1234
 			server = new ServerSocket(1234);
 			server.setReuseAddress(true);
@@ -88,7 +86,7 @@ public class Server {
 		}
     }
     
-    private static class ClientHandler implements Runnable {
+    public static class ClientHandler implements Runnable {
     	private final Socket clientSocket;
     	private Account account;
     	private boolean stoodOrBust;
@@ -101,6 +99,16 @@ public class Server {
     	public ClientHandler(Socket socket) throws IOException
     	{
     		this.clientSocket = socket;	
+    		
+    		// get the outputstream and inputstream of client
+			OutputStream outBase = clientSocket.getOutputStream();
+			InputStream inBase = clientSocket.getInputStream();
+			
+			// Create object streams so we can read and write TestMessages to client.
+			out = new ObjectOutputStream(outBase);
+	        in = new ObjectInputStream(inBase);
+	        
+	        out.writeObject(new TestMessage("Connected","success","NA"));
     	}
 
     	// Run on instantiation
@@ -109,14 +117,6 @@ public class Server {
     		// Initialize variables for client communication
     		boolean login = false;
     		try {
-    				
-    			// get the outputstream and inputstream of client
-    			OutputStream outBase = clientSocket.getOutputStream();
-    			InputStream inBase = clientSocket.getInputStream();
-    			
-    			// Create object streams so we can read and write TestMessages to client.
-    			out = new ObjectOutputStream(outBase);
-    	        in = new ObjectInputStream(inBase);
 
     	        // Communicate until client connection is severed
     			TestMessage line;
@@ -134,6 +134,43 @@ public class Server {
     						out.writeObject(new TestMessage("text","success",capitalInput));
     						
     					}
+    					else if (line.getType().compareTo("TableJoin") == 0) {	// Capitalize contents of text TestMessage
+    						lookForTable();
+    					}
+    					else if (line.getType().compareTo("TableLeave") == 0) {	// Capitalize contents of text TestMessage
+    						removeFromTable();
+    					}
+    					else if (line.getType().compareTo("MakeTable") == 0) {	// Capitalize contents of text TestMessage
+    						makeTable();
+    					}
+    					else if (line.getType().compareTo("SignIn") == 0) {	// Capitalize contents of text TestMessage
+    						String accountInfo = line.getText();
+    						String[] accountDetails = new String[3];
+    						int detailCounter = 0;
+    						String detail = "";
+    						for (int i = 0; i < accountInfo.length(); i++) {
+    							if (accountInfo.charAt(i) == ',') {
+    								if (detailCounter == 2) {
+    									break;
+    								}
+    								accountDetails[detailCounter] = detail;
+    								detail = "";
+    								detailCounter++;
+    							}
+    							else {
+    								detail += accountInfo.charAt(i);
+    							}
+    						}
+    						accountDetails[detailCounter] = detail;
+    						detail = "";
+    						detailCounter++;
+    						if(logIn(accountDetails[0], accountDetails[1], accountDetails[2])) {
+    							out.writeObject(new TestMessage("SignIn","success","NA"));
+    						}
+    						else {
+    							informClientOfError(ErrorType.TypeError);
+    						}
+    					}
     				}
     				else {	// Only listen for login TestMessages if client is not logged in
     					if (line.getType().compareTo("login") == 0) {
@@ -141,6 +178,7 @@ public class Server {
     						out.writeObject(new TestMessage("login","success","success"));
     					}
     				}
+    				collectMessage(line);
     			}
     		}
     		catch (IOException | ClassNotFoundException e) {	// Exception handling
@@ -162,12 +200,21 @@ public class Server {
     		}
     	}
     	public void lookForTable() {
+    		// Do not let client look for table if timed out
+    		if (account.isTimedOut()) {
+    			informClientOfError(ErrorType.TypeError);
+    			return;
+    		}
+    		
+    		// Join table
+//    		writeMessage(new TestMessage("GetTable","success","table info"));
     		for (int i = 0; i < availableTables.size(); i++) {
     			seatedAt = availableTables.get(i);
     		}
     	}
     	public void makeTable() {
-    		availableTables.add(null);
+    		// Add a new table
+    		availableTables.add(new Table());
     	}
     	public void timeOut() {
     		account.setTimeOut(300);
@@ -179,9 +226,13 @@ public class Server {
     		return newAccount.validate(username, password, credentials);
     	}
     	public boolean logIn(String username, String password, String credentials) {
-    		Account matchingAccount = new Account(username, password, credentials);
-    		account = matchingAccount;
-    		return matchingAccount.validate(username, password, credentials);
+    		for (Account existingAccount: accountRegistry) {
+    			if (existingAccount.validate(username, password, credentials)) {
+    				account = existingAccount;
+    				return true;
+    			}
+    		}
+    		return false;
     	}
     	public double getPlayerBalance() {
     		return account.getBalance();
@@ -196,19 +247,24 @@ public class Server {
     	}
     	
     	public void informClientOfError(ErrorType errorType) {
-    		try {
-				out.writeObject(new TestMessage("Bet","success","NA"));
-			} catch (IOException e) {
-				e.printStackTrace();
+    		if (errorType == ErrorType.TypeError) {
+				writeMessage(new TestMessage("Error","failure","timedOutResponse"));
 			}
     	}
     	
     	public void askForBets() {
     		try {
     			TestMessage line = new TestMessage();
-				out.writeObject(new TestMessage("Bet","success","NA"));
-				if ((line = (TestMessage) in.readObject()) != null) {
-					account.setBet(42);
+				out.writeObject(new TestMessage("RequestBet","success","NA"));
+				while ((line = (TestMessage) in.readObject()) != null) {
+					if (line.getType().compareTo("Bet") == 0) {
+						if (account.setBet(Double.parseDouble(line.getText()))) {
+							return;
+						}
+					}
+					else {
+						informClientOfError(ErrorType.TypeError);
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -218,6 +274,9 @@ public class Server {
     	}
     	public void removeFromTable() {
     		seatedAt = null;
+    		if (true) {
+    			timeOut();
+    		}
     	}
     	public void askForAction() {
     		try {
@@ -238,10 +297,11 @@ public class Server {
 			}
     	}
     	public void hitRequest() {
-    		
+    		Card card = seatedAt.drawCard();
+    		account.receiveCard(card);
     	}
     	public void standRequest() {
-    		
+    		stoodOrBust = true;
     	}
     	public void addCard(Card card) {
     		account.receiveCard(card);
@@ -305,43 +365,66 @@ public class Server {
     			}
     		}
     	}
-    	public void save() {
-    		for (Account registered: accountRegistry) {
-    			if (account == registered) {
-    				File registryFile = new File("accounts.txt");
-    				Scanner registryLoader = null;
-					try {
-						registryLoader = new Scanner(registryFile);
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
+    	public void save() { // Non-functioning at this moment
+    		File registryFile = new File("accounts.txt");
+			Scanner registryLoader = null;
+			BufferedWriter registryUpdater = null;
+			Boolean foundAccount = false;
+			try {
+				registryLoader = new Scanner(registryFile);
+				registryUpdater = new BufferedWriter(new FileWriter("accounts.txt"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			while(registryLoader.hasNextLine()) {
+				String accountData = registryLoader.nextLine();
+				if (foundAccount) {
+					break;
+				}
+				String[] accountDetails = new String[3];
+				int detailCounter = 0;
+				String detail = "";
+				for (int i = 0; i < accountData.length(); i++) {
+					if (accountData.charAt(i) == ',') {
+						accountDetails[detailCounter] = detail;
+						detail = "";
+						detailCounter++;
 					}
-    				while(registryLoader.hasNextLine()) {
-    					String accountData = registryLoader.nextLine();
-    					String[] accountDetails = new String[5];
-    					int detailCounter = 0;
-    					String detail = "";
-    					for (int i = 0; i < accountData.length(); i++) {
-    						if (accountData.charAt(i) == ',') {
-    							accountDetails[detailCounter] = detail;
-    							detail = "";
-    							detailCounter++;
-    						}
-    						else {
-    							detail += accountData.charAt(i);
-    						}
-    					}
-    					accountDetails[detailCounter] = detail;
-    					detail = "";
-    					detailCounter++;
-    					accountRegistry.add(new Account(accountDetails[0],accountDetails[1],accountDetails[2],
-    							Double.parseDouble(accountDetails[3]),Integer.parseInt(accountDetails[4])));
-    				}
-    			}
-    		}
+					else {
+						detail += accountData.charAt(i);
+					}
+				}
+				accountDetails[detailCounter] = detail;
+				detail = "";
+				detailCounter++;
+				if(account.validate(accountDetails[0], 
+						accountDetails[1], accountDetails[2])) {
+					accountData = accountDetails[0] + "," + accountDetails[1] + ',' + accountDetails[2] + ",";
+					accountData += account.getBalance() + ",";
+					accountData += account.getTimeOut();
+				}
+				try {
+					registryUpdater.write(accountData);
+					registryUpdater.newLine();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
     	}
     	public boolean getStoodOrBust() {
     		return stoodOrBust;
     	}
-
+    	public synchronized void collectMessage(TestMessage message) {
+    		messageLog.add(message);
+    	}
+    	public void writeMessage(TestMessage message) {
+    		// write and record messages sent to client
+    		try {
+				out.writeObject(message);
+				collectMessage(message);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+    	}
     }
 }

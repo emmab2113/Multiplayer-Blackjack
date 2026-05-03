@@ -32,10 +32,11 @@ public class Account {
 		
 	}
 	public boolean modifyBalance(double balance) {
-		if (balance * -1 > this.balance) {
+		double USDBalance = Math.round(balance * 100.0) / 100.0;
+		if (USDBalance * -1 > balance) {
 			return false;
 		}
-		this.balance += balance;
+		balance += USDBalance;
 		return true;
 	}
 	public void setTimeOut(int timer) {
@@ -52,7 +53,7 @@ public class Account {
 		return false;
 	}
 	public void resetCardsAndBet() {
-		modifyBalance(activeBet * 2);
+		modifyBalance(activeBet * 2); // Temporary line; pay out should be given by table;
 		activeBet = 0;
 		cards.clear();
 	}
@@ -66,7 +67,8 @@ public class Account {
 	}
 	
 	public boolean validate(String username, String password, String credentials) {
-		Boolean isValid = (this.username == username && this.password == password && this.credentials == credentials && !signedIn);
+		Boolean isValid = (this.username.compareTo(username) == 0 && this.password.compareTo(password) == 0
+				&& this.credentials.compareTo(credentials) == 0 && !signedIn);
 		if (isValid) {
 			signedIn = true;
 			return true;
@@ -79,6 +81,9 @@ public class Account {
 	public boolean SignOut() {
 		signedIn = false;
 		return true;
+	}
+	public int getTimeOut() {
+		return timeOut;
 	}
 
 }

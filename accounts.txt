@@ -1,2 +1,2 @@
-player123,password,0,100,0
+player123,password,0,100.00,0
 dealer456,wordpass,1,0,0

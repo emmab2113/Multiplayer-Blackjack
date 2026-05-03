@@ -28,7 +28,7 @@ public class Client {
 			Scanner sc = new Scanner(System.in); //System.in is a standard input stream.
 	        int port = 1234;
 	        String host;
-				host = InetAddress.getLocalHost().getHostAddress().trim();
+			host = InetAddress.getLocalHost().getHostAddress().trim();
 	
 	        // Automatically connects to the ServerSocket at host:port if it's active
 	        Socket socket = new Socket(host, port);
