@@ -1,6 +1,8 @@
 package MBServer;
 
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Account {
 	private String username;
@@ -43,6 +45,19 @@ public class Account {
 	}
 	public void setTimeOut(int timer) {
 		timeOut = timer;
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.execute(() -> 
+		{
+			try {
+				while (timeOut > 0) {
+					Thread.sleep(1000);
+					timeOut--;
+				}
+			} catch (InterruptedException e) {
+				
+			}
+		});
+		executor.shutdown();
 	}
 	public boolean isTimedOut() {
 		return (timeOut > 0);
@@ -87,6 +102,8 @@ public class Account {
 	public int getTimeOut() {
 		return timeOut;
 	}
-
+	public String getUsername() {
+		return username;
+	}
 }
 

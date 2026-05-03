@@ -143,7 +143,7 @@ public class Server {
     					else if (line.getType().compareTo("MakeTable") == 0) {	// Capitalize contents of text Message
     						makeTable();
     					}
-    					else if (line.getType().compareTo("SignIn") == 0) {	// Capitalize contents of text Message
+    					else if (line.getType().compareTo("LogIn") == 0) {	// Capitalize contents of text Message
     						String accountInfo = line.getText();
     						String[] accountDetails = new String[3];
     						int detailCounter = 0;
@@ -165,7 +165,7 @@ public class Server {
     						detail = "";
     						detailCounter++;
     						if(logIn(accountDetails[0], accountDetails[1], accountDetails[2])) {
-    							out.writeObject(new Message("SignIn","success","NA"));
+    							out.writeObject(new Message("LogIn","success","NA"));
     						}
     						else {
     							informClientOfError(ErrorType.TypeError);
@@ -173,7 +173,14 @@ public class Server {
     					}
     					else if (line.getType().compareTo("SignOut") == 0) {	// Capitalize contents of text Message
     						account.signOut();
-    						out.writeObject(new Message("SignOut","success","NA"));
+    						writeMessage(new Message("SignOut","success","NA"));
+    					}
+    					else if (line.getType().compareTo("TimeOut") == 0) {	// Capitalize contents of text Message
+    						if (account.isTimedOut()) {
+    							informClientOfError(ErrorType.TimedOut);
+    						}
+    						timeOut();
+    						writeMessage(new Message("text","success","Time out started"));
     					}
     					else if (line.getType().compareTo("Register") == 0) {	// Capitalize contents of text Message
     						String accountInfo = line.getText();
@@ -196,12 +203,6 @@ public class Server {
     						accountDetails[detailCounter] = detail;
     						detail = "";
     						detailCounter++;
-    						if(logIn(accountDetails[0], accountDetails[1], accountDetails[2])) {
-    							out.writeObject(new Message("SignIn","success","NA"));
-    						}
-    						else {
-    							informClientOfError(ErrorType.TypeError);
-    						}
     						if (register(accountDetails[0], accountDetails[1], accountDetails[2])) {
     							out.writeObject(new Message("Registered","success","NA"));
     						}
@@ -255,10 +256,11 @@ public class Server {
     			}
     		}
     	}
+    	
     	public void lookForTable() {
     		// Do not let client look for table if timed out
     		if (account.isTimedOut()) {
-    			informClientOfError(ErrorType.TypeError);
+    			informClientOfError(ErrorType.TimedOut);
     			return;
     		}
     		
@@ -267,25 +269,42 @@ public class Server {
     		seatedAt = availableTables.get(0);
     		seatedAt.addUserToTable(this);
     	}
+    	
     	public void makeTable() {
     		// Add a new table
     		availableTables.add(new Table());
     	}
+    	
     	public void timeOut() {
     		account.setTimeOut(300);
     	}
-    	public boolean register(String username, String password, String credentials) {
+    	
+    	public synchronized boolean register(String username, String password, String credentials) {
     		for (Account existingAccount: accountRegistry) {
-    			if (existingAccount.validate(username, password, credentials)) {
-    				existingAccount.signOut();
+    			if (existingAccount.getUsername().compareTo(username) == 0) {
     				return false;
     			}
     		}
-    		Account newAccount = new Account(username, password, credentials);
+    		File registryFile = new File("accounts.txt");
+    		Scanner registryLoader = null;
+			BufferedWriter registryUpdater = null;
+			try {
+				registryLoader = new Scanner(registryFile);
+				registryUpdater = new BufferedWriter(new FileWriter("accounts.txt"));
+				while (registryLoader.hasNextLine()) {
+					registryUpdater.write(registryLoader.nextLine());
+				}
+				registryUpdater.write(username + "," + password + "," + credentials + ",0.00,0");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			Account newAccount = new Account(username, password, credentials);
     		accountRegistry.add(newAccount);
     		account = newAccount;
     		return newAccount.validate(username, password, credentials);
     	}
+    	
     	public boolean logIn(String username, String password, String credentials) {
     		for (Account existingAccount: accountRegistry) {
     			if (existingAccount.validate(username, password, credentials)) {
@@ -295,15 +314,18 @@ public class Server {
     		}
     		return false;
     	}
+    	
     	public double getPlayerBalance() {
     		return account.getBalance();
     	}
+    	
     	public boolean chargePlayerBalance(double currency) {
     		if (currency > 0) {
     			return false;
     		}
     		return account.modifyBalance(currency);
     	}
+    	
     	public boolean addToPlayerBalance(double currency) {
     		if (currency < 0) {
     			return false;
@@ -315,6 +337,9 @@ public class Server {
     		if (errorType == ErrorType.TypeError) {
 				writeMessage(new Message("Error","failure","timedOutResponse"));
 			}
+    		if (errorType == ErrorType.TimedOut) {
+    			writeMessage(new Message("Error","failure", "Seconds remaining for timeout:" + account.getTimeOut()));
+    		}
     	}
     	
     	public void askForBets() {
@@ -391,13 +416,14 @@ public class Server {
     	}
     	public void getGameCards() {
     		String allRanks = "";
-    		Vector<Card> hand = account.getCards(); // Temporary, should pull from table
+    		Vector<Card> hand = seatedAt.getCardsDrawn();
     		for (Card card: hand) {
     			allRanks += card.getSuit();
     			allRanks += card.getRank();
     		}
     		writeMessage(new Message("RenderCard","success",allRanks));
     	}
+    	
     	public void checkRanks() {
     		int aces = 0;
     		int score = 0;
@@ -431,17 +457,22 @@ public class Server {
 			}
     		writeMessage(new Message("Hit","success",results));
     	}
-    	public void save() { // Non-functioning at this moment
+    	
+    	public synchronized void save() {
+    		// Prepare to save account info to registry
     		File registryFile = new File("accounts.txt");
 			Scanner registryLoader = null;
 			BufferedWriter registryUpdater = null;
 			Boolean foundAccount = false;
+			String newRegistry = "";
 			try {
 				registryLoader = new Scanner(registryFile);
 				registryUpdater = new BufferedWriter(new FileWriter("accounts.txt"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
+			// Read through each entry in registry
 			while(registryLoader.hasNextLine()) {
 				String accountData = registryLoader.nextLine();
 				if (foundAccount) {
@@ -463,26 +494,31 @@ public class Server {
 				accountDetails[detailCounter] = detail;
 				detail = "";
 				detailCounter++;
-				if(account.validate(accountDetails[0], 
-						accountDetails[1], accountDetails[2])) {
+				if (account.getUsername().compareTo(accountDetails[0]) == 0) {
 					accountData = accountDetails[0] + "," + accountDetails[1] + ',' + accountDetails[2] + ",";
 					accountData += account.getBalance() + ",";
 					accountData += account.getTimeOut();
 				}
-				try {
-					registryUpdater.write(accountData);
-					registryUpdater.newLine();
-				} catch (IOException e) {
-					e.printStackTrace();
+				if (registryLoader.hasNextLine()) {
+					accountData += "\n";
 				}
+				newRegistry += accountData;
+			}
+			try {
+				registryUpdater.write(newRegistry);
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
     	}
+    	
     	public boolean getStoodOrBust() {
     		return stoodOrBust;
     	}
+    	
     	public synchronized void collectMessage(Message message) {
     		messageLog.add(message);
     	}
+    	
     	public void writeMessage(Message message) {
     		// write and record messages sent to client
     		try {

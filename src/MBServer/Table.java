@@ -109,6 +109,9 @@ public class Table {
 		}
 		for (int i = 0; i < this.players.length; i++) {
 			if (user == this.players[i]) {
+				if (this.gameActive) {
+					this.players[i].timeOut();
+				}
 				this.players[i] = null;
 				return;
 			}

@@ -18,9 +18,8 @@ import MBServer.Server;
 READ FIRST
 
 1. type SignIn
-2. type MakeTable
+2. type TimeOut
 3. type TableJoin
-4. follow prompts
 */
 
 public class Driver {
@@ -72,14 +71,23 @@ public class Driver {
 	        		else if (clientCom.compareTo("MakeTable") == 0) {	// Not functional
 	        			objectOutputStream.writeObject(new Message("MakeTable","pending","Undefined"));
 	        		}
-	        		else if (clientCom.compareTo("SignIn") == 0) {	// Not functional
-	        			objectOutputStream.writeObject(new Message("SignIn","pending","player123,password,0"));
+	        		else if (clientCom.compareTo("LogIn") == 0) {
+	        			objectOutputStream.writeObject(new Message("LogIn","pending","player123,password,0"));
+	        			expectMessage = true;
+	        		}
+	        		else if (clientCom.compareTo("Register") == 0) {
+	        			objectOutputStream.writeObject(new Message("Register","pending","playerEpic,password,0"));
+	        			expectMessage = true;
+	        		}
+	        		else if (clientCom.compareTo("TimeOut") == 0) {
+	        			objectOutputStream.writeObject(new Message("TimeOut","pending","NA"));
 	        			expectMessage = true;
 	        		}
 	        		else {	// Sent text message to server
 	        			objectOutputStream.writeObject(new Message("text","pending",clientCom));
 	        			expectMessage = true;
 	        		}
+	        		
 	        		if (expectMessage) {
 	        			serverCom = ((Message) objectInputStream.readObject());	// Await response
 		        		if (serverCom.getType().compareTo("text") == 0 && serverCom.getStatus().compareTo("success") == 0) {
@@ -99,6 +107,9 @@ public class Driver {
 		        			System.out.println(serverCom.getText());
 		        		}
 		        		
+		        		else if (serverCom.getType().compareTo("Registered") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
 		        		else if (serverCom.getType().compareTo("Disconnected") == 0){
 		        			login = false;
 		        			return;	// Exit after logging out program
