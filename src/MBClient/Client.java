@@ -7,150 +7,288 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Vector;
 
 import enums.ErrorType;
+import enums.MessageStatus;
+import enums.MessageType;
 
 public class Client {
+	// network connectivity //
+	private int port;
+	private String host;
+	private Socket socket;
+	private OutputStream outputStream;
+	private InputStream inputStream;
+	private ObjectOutputStream objectOutputStream;
+	private ObjectInputStream objectInputStream;	
+	// user info //
+	private String IPAddress; // client IP or server IP?
+	private Vector<Message> messageLog; // supposed to be recording every message?
 	private boolean loggedIn;
-	private boolean[] seatedPlayers;
-	private String IPAddress;
 	private String username;
-	private Vector<Message> messageLog;
+	private boolean[] seatedPlayers;
 	
-	public static void main(String[] args) {
+	// CONSTRUCTORS //
+	public Client() {
 		try {
 			// initialize port/host with default values
-			int port = 1234;
-			String host = InetAddress.getLocalHost().getHostAddress(); // host default to inet address
-			
+			this.port =1234;
+			this.host = InetAddress.getLocalHost().getHostAddress().trim(); // host default to inet address;
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+	}
+	public Client(int port, String host) {
+		this.port = port;
+		this.host = host;
+	}
+	
+	// PUBLIC METHODS //
+	public void connect() {
+		try {		
 	        // connect to the ServerSocket at host:port
-	        Socket socket = new Socket(host, port);
-	        System.out.println("\nConnected to " + host + ":" + port);
+	        socket = new Socket(host, port);
+	        System.out.println("\nconnected to " + host + ":" + port);
 	        
 	        // establish output stream to server
 	        // get output stream from connected socket
 	        OutputStream outputStream = socket.getOutputStream();
 	        // create an ObjectOutputStream to send an object through outputStream
-	        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-	        
+			objectOutputStream = new ObjectOutputStream(outputStream);
+			
 	        // establish input stream from server
 	        // get input stream from connected socket
 	        InputStream inputStream = socket.getInputStream();
 	        // create an ObjectInputStream to receive an object through inputStream
 	        ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-	        
-	        // send Connected message
-	        
-	        // receive Connected message back with Success status
-	        
-	        // user choices: login or register
-	        
-	        // if user choose login,
-	        // get user/pass
-	        // send Login message containing user/pass (status: Pending)
-	        // receive Login message back from server, check status
-	        // if status Success, move to main menu depending on credentials
-	        // if status Fail, notify user of failure, re-prompt user/pass
-	        
-	        // if user choose register,
-	        // get credential/user/pass (validate)
-	        // send Register message containing credential/user/pass
-	        // receive Register message back from server, check status
-	        // if status Success, move to main menu depending on credentials
-	        
-	        /* player main menu */
-	        
-	        // user choices: balance, play, or logout
-	        
-	        // if user choose balance,
-	        // send BalanceRequest message
-	        // wait for BalanceView message received containing balance
-	        // display balance
-	        // user choices: deposit, withdraw, or back
-	        // if choose deposit, 
-	        //		get deposit amount (validate)
-	        //		send DepositRequest message containing deposit amount
-	        // 		wait for Deposit message received with Success status containing new balance
-	        //		update balance display
-	        // if choose withdraw,
-	        //		get withdraw amount (validate)
-	        //		send WithdrawRequest message containing withdraw amount 	
-	        // 		wait for Withdraw message received containing new balance, check status
-	        //		if status Success, update balance display
-	        // 		if status Fail, notify user of failure, do not update balance display
-	        // if choose back,
-	        // 		return to main menu
-	        
-	        // if user choose play,
-	        // move to lobby screen (available tables loading)
-	        // send GetTables message to server with Pending status
-	        // wait for GetTables message back from server with Success status
-	        // read available tables from message into list
-	        // display available tables in clickable list on lobby screen
-	        // user choices: choose table or back
-	        // if choose table,
-	        // 		send TableJoin message containing desired table
-	        //		wait for TableJoin message received back, check status
-	        //		if status Success, 
-	        // 			save tableID
-	        //			move to player game screen
-	        //		if status Fail, 
-	        //			notify user of failure 
-	        //			remove table from list, update display
-	        // 			prompt for a different table
-	        // 			restart from "send TableJoin message"
-	        // if choose back,
-	        //		return to main menu
-	        
-	        // if user choose logout,
-	        // send Logout message
-	        // wait for Logout message back from server, check status
-	        // if status Success, return to open screen
-	        
-	        /* dealer main menu */ 
-	        
-	        // user choices: host table or logout
-	        
-	        // if user choose host table,
-	        // send hostTable message
-	        // wait for hostTable message back from server, check status
-	        // if status Success, move to dealer game screen
-	        // if status Fail, ?
-	        
-	        // if user choose logout,
-	        // send Logout message
-	        // wait for Logout message back from server, check status
-	        // if status Success, return to open screen
-	        
-	        /* player game screen */
-	        
-	        
-	        
-	        /* dealer game screen */
-	        
-	        
-	        
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+	public boolean verifyConnection() {
+        // send Connected message to server
+        send(new Message(MessageType.Connected, MessageStatus.Pending));
+        
+        // read response from server
+        Message responseMessage = receive();
+        
+        // verify successful connection to server
+        // (expecting Connected message back with Success status)
+        if (responseMessage.getType() == MessageType.Connected
+        	&& responseMessage.getStatus() == MessageStatus.Success) {
+        	return true;
+        }
+        else {
+        	// connection failed
+        	System.out.println("\nobject over socket connection failed");
+        	return false;
+        }
+	}
+	public boolean requestLogIn(String username, String password, String credentials) {
+		// send LogIn message to server
+    	send(new Message(MessageType.LogIn, MessageStatus.Pending, username + "," + password + "," + credentials));
+    	
+    	// read response from server
+    	Message responseMessage = receive();
+    	
+    	// interpret response: verify successful login
+    	if (responseMessage.getType() == MessageType.LogIn 
+    		&& responseMessage.getStatus() == MessageStatus.Success) {
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}
+	}
+	public boolean requestRegistry(String username, String password, String credentials) {
+		// send Register message to server
+    	send(new Message(MessageType.Register, MessageStatus.Pending, username + "," + password + "," + credentials));
+    	
+    	// read response message from server
+    	Message responseMessage = receive();
+    	
+    	// interpret response: verify successful registry
+    	if (responseMessage.getType() == MessageType.Register 
+    		&& responseMessage.getStatus() == MessageStatus.Success) {
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}
+	}
+	public boolean requestLogOut() {
+		// send LogOut message to server
+    	send(new Message(MessageType.LogOut, MessageStatus.Pending));
+    	
+    	// read response from server
+    	Message responseMessage = receive();
+    	
+    	// interpret response: verify successful logout
+    	if (responseMessage.getType() == MessageType.LogOut 
+    		&& responseMessage.getStatus() == MessageStatus.Success) {
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}
+	}
+	public double requestBalanceView() {
+		// send BalanceRequest message to server
+		send(new Message(MessageType.BalanceRequest, MessageStatus.Pending));
+		
+        // read response message from server
+		Message responseMessage = receive();
+		
+		// interpret response: verify balance successfully fetched
+		if (responseMessage.getType() == MessageType.BalanceView 
+			&& responseMessage.getStatus() == MessageStatus.Success) {
+			// read and return balance
+			return Double.parseDouble(responseMessage.getText());
+		}
+		
+		// throw exception if no balance received
+		throw new IllegalStateException("invalid BalanceRequest response");
+	}	
+	public double requestBalanceDeposit(Double currency) {
+		// send DepositRequest message to server
+		send(new Message(MessageType.DepositRequest, MessageStatus.Pending, String.valueOf(currency)));
+		
+        // read response message from server
+		Message responseMessage = receive();
+		
+		// interpret response: verify balance successfully updated
+		if (responseMessage.getType() == MessageType.DepositBalance 
+			&& responseMessage.getStatus() == MessageStatus.Success) {
+			// read and return updated balance
+			return Double.parseDouble(responseMessage.getText());
+		}
+		
+		// throw exception if no balance received
+		throw new IllegalStateException("invalid DepositRequest response");	
+	}
+	public double requestBalanceWithdrawal(Double currency) {
+		// send WithdrawRequest message to server
+		send(new Message(MessageType.WithdrawRequest, MessageStatus.Pending, String.valueOf(currency)));
+		
+        // read response message from server
+		Message responseMessage = receive();
+		
+		// interpret response: verify balance successfully updated
+		if (responseMessage.getType() == MessageType.WithdrawBalance 
+			&& responseMessage.getStatus() == MessageStatus.Success) {
+			// read and return updated balance
+			return Double.parseDouble(responseMessage.getText());
+		}
+		
+		// throw exception if no balance received
+		throw new IllegalStateException("invalid WithdrawRequest response");
+	}
+	public String[] GetTables() {
+		// send GetTables message to server
+		send(new Message(MessageType.GetTables, MessageStatus.Pending));
+		
+        // read response message from server
+		Message responseMessage = receive();
+		
+		// interpret response: verify tables returned
+		if (responseMessage.getType() == MessageType.GetTables 
+			&& responseMessage.getStatus() == MessageStatus.Success) {
+			// read tables into string array
+			String[] tableList = responseMessage.getText().split(",");
+			return tableList;
+		}
+		
+		// throw exception if tables not received
+		throw new IllegalStateException("invalid GetTables response");
+	}
+	public boolean joinTable(String tableID) {
+		// send TableJoin message to server
+		send(new Message(MessageType.TableJoin, MessageStatus.Pending, tableID));
+		
+        // read response message from server
+		Message responseMessage = receive();
+		
+		// interpret response: verify table successfully joined
+		if (responseMessage.getType() == MessageType.TableJoin 
+			&& responseMessage.getStatus() == MessageStatus.Success 
+			&& responseMessage.getText() == tableID) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	public boolean leaveTable() {
+		// send TableLeave message to server
+		send(new Message(MessageType.TableLeave, MessageStatus.Pending));
+		
+        // read response message from server
+		Message responseMessage = receive();
+		
+		// interpret response: verify table successfully left
+		if (responseMessage.getType() == MessageType.TableLeave 
+			&& responseMessage.getStatus() == MessageStatus.Success) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	public boolean chooseBet(double bet) {
+		// send Bet message to server
+		send(new Message(MessageType.Bet, MessageStatus.Pending, String.valueOf(bet)));
+		
+        // read response message from server
+		Message responseMessage = receive();
+		
+		// interpret response: verify bet successfully received
+		if (responseMessage.getType() == MessageType.Bet 
+			&& responseMessage.getStatus() == MessageStatus.Success) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}	
+	public void hit() {
+		// send Hit message to server
+		send(new Message(MessageType.Hit, MessageStatus.Pending));
+	}
+	public void stand() {
+		// send Stand message to server
+		send(new Message(MessageType.Stand, MessageStatus.Pending));
+	}
 	
-	public void joinTable() {}
-	public void leaveTable() {}
-	public void requestRegistry(String username, String password, String credentials) {}
-	public void requestLogIn(String username, String password, String credentials) {}
-	public void requestBalanceDisplay() {}
-	public void requestBalanceDeposit(Double currency) {}
-	public void requestBalanceWithdrawal(Double currency) {}
-	public void displayError(ErrorType errorType) {}
-	public double chooseChips() {}
-	public void hit() {}
-	public void stand() {}
-	public void terminateSession() {}
-	public void establishConnection() {}
+	// PRIVATE METHODS // 
+	private void send(Message msg) {
+		try {
+			objectOutputStream.writeObject(msg);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	private Message receive() {
+		Message msg = new Message();
+		try {
+			msg = (Message) objectInputStream.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return msg;
+	}	
+	
+	
 	public void displayGameUsers() {}
 	public void displayGameCards() {}
 	public void displayGameStatus() {}
-	private void getIPAddress() {}
+	
+	public void displayError(ErrorType errorType) {} // ?
+	private void getIPAddress() {} // ?
+	
+	
+	
+
 }
