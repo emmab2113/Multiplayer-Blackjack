@@ -487,7 +487,7 @@ public class Server {
     		writeMessage(new Message("RenderCard","success",allRanks));
     	}
     	
-    	public void checkRanks() {
+    	public int checkRanks() {
     		int aces = 0;
     		int score = 0;
     		String curRank = "";
@@ -519,6 +519,7 @@ public class Server {
 				}
 			}
     		writeMessage(new Message("Hit","success",results));
+			return score;
     	}
     	
     	public synchronized void save() {

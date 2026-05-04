@@ -2,6 +2,7 @@ package testsForMBServer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import MBServer.Account;
+import MBServer.Card;
 
 public class AccountTest {
 	Account testAccount;
@@ -81,5 +83,28 @@ public class AccountTest {
 	@Test
 	public void setBetTest2(){
 		assertFalse(testAccount.setBet(1));
+	}
+	
+	@Test
+	public void resetCardsAndBetTest1(){
+		testAccount.modifyBalance(10);
+		testAccount.setBet(5);
+		testAccount.receiveCard(new Card("A", "Clubs"));
+		testAccount.resetCardsAndBet(false);
+		int balanceInInt = (int) testAccount.getBalance();
+		System.out.println(balanceInInt);
+		assertEquals(5, balanceInInt);
+		assertTrue(testAccount.getCards().isEmpty());
+	}
+	
+	@Test
+	public void resetCardsAndBetTest2(){
+		testAccount.modifyBalance(10);
+		testAccount.setBet(5);
+		testAccount.receiveCard(new Card("A", "Clubs"));
+		testAccount.resetCardsAndBet(true);
+		int balanceInInt = (int) testAccount.getBalance();
+		assertEquals(15, balanceInInt);
+		assertTrue(testAccount.getCards().isEmpty());
 	}
 }
