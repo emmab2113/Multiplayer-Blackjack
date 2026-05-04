@@ -12,7 +12,7 @@ import java.util.Scanner;
 import java.util.Vector;
 
 import enums.ErrorType;
-import enums.Message;
+import message.Message;
 import MBServer.Server;
 /*
 READ FIRST

@@ -1,6 +1,10 @@
-package enums;
+package message;
 
 import java.io.Serializable;
+
+import enums.ErrorType;
+import enums.MessageStatus;
+import enums.MessageType;
 
 public class Message implements Serializable {
 	private static int Counter;
