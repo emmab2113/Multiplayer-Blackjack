@@ -31,6 +31,7 @@ public class Table {
 			if (player != null) {
 				this.players[this.playersTurn].addCard(drawCard());
 				this.players[this.playersTurn].addCard(drawCard());
+				return; // TEMPORARY TESTING CODE
 			}
 		}
 		this.dealer.addCard(drawCard());

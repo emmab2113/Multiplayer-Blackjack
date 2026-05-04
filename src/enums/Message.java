@@ -4,25 +4,25 @@ import java.io.Serializable;
 
 public class Message implements Serializable {
 	private static int Counter;
-	private String ID;
-	private boolean serverSent;
-	private ErrorType error;
-	private MessageType messageType;
-	private MessageStatus messageStatus;
-	private String info;
+	private /*final*/ String ID;
+	private /*final*/ boolean serverSent;
+	private /*final*/ ErrorType error;
+	private /*final*/ MessageType messageType;
+	private /*final*/ MessageStatus messageStatus;
+	private /*final*/ String info;
 	
     protected final String type;
     protected final String status;
     protected final String text;
 
     public Message(){
-        this.type = "Undefined";
+		this.type = "Undefined";
         this.status = "Undefined";
         this.text = "Undefined";
     }
 
     public Message(String type, String status, String text){
-    	this.type = type;
+		this.type = type;
         this.status = status;
         this.text = text;
     }

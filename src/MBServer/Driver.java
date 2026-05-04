@@ -65,11 +65,9 @@ public class Driver {
 	        			objectOutputStream.writeObject(new Message("TableJoin","pending","Undefined"));
 	        			expectMessage = true;
 	        		}
-	        		else if (clientCom.compareTo("TableLeave") == 0) {	// Not functional
+	        		else if (clientCom.compareTo("TableLeave") == 0) {
 	        			objectOutputStream.writeObject(new Message("TableLeave","pending","Undefined"));
-	        		}
-	        		else if (clientCom.compareTo("MakeTable") == 0) {	// Not functional
-	        			objectOutputStream.writeObject(new Message("MakeTable","pending","Undefined"));
+	        			expectMessage = true;
 	        		}
 	        		else if (clientCom.compareTo("LogIn") == 0) {
 	        			objectOutputStream.writeObject(new Message("LogIn","pending","player123,password,0"));
@@ -95,6 +93,22 @@ public class Driver {
 	        			objectOutputStream.writeObject(new Message("WithdrawRequest","pending","-25.00"));
 	        			expectMessage = true;
 	        		}
+	        		else if (clientCom.compareTo("RequestBet") == 0) {
+	        			objectOutputStream.writeObject(new Message("RequestBet","pending","NA"));
+	        			expectMessage = true;
+	        		}
+	        		else if (clientCom.compareTo("GameAction") == 0) {
+	        			objectOutputStream.writeObject(new Message("GameAction","pending","NA"));
+	        			expectMessage = true;
+	        		}
+	        		else if (clientCom.compareTo("RenderCard") == 0) {
+	        			objectOutputStream.writeObject(new Message("RenderCard","pending","NA"));
+	        			expectMessage = true;
+	        		}
+	        		else if (clientCom.compareTo("RenderPlayer") == 0) {
+	        			objectOutputStream.writeObject(new Message("RenderPlayer","pending","NA"));
+	        			expectMessage = true;
+	        		}
 	        		else {	// Sent text message to server
 	        			objectOutputStream.writeObject(new Message("text","pending",clientCom));
 	        			expectMessage = true;
@@ -118,7 +132,12 @@ public class Driver {
 		        			serverCom = ((Message) objectInputStream.readObject());
 		        			System.out.println(serverCom.getText());
 		        		}
-		        		
+		        		else if (serverCom.getType().compareTo("TableJoin") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
+		        		else if (serverCom.getType().compareTo("TableLeave") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
 		        		else if (serverCom.getType().compareTo("Registered") == 0){
 		        			System.out.println(serverCom.getText());
 		        		}
@@ -131,11 +150,27 @@ public class Driver {
 		        		else if (serverCom.getType().compareTo("Withdraw") == 0){
 		        			System.out.println(serverCom.getText());
 		        		}
-		        		else if (serverCom.getType().compareTo("Disconnected") == 0){
+		        		else if (serverCom.getType().compareTo("LogOut") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
+		        		else if (serverCom.getType().compareTo("RequestBet") == 0){
+		        			do {
+		        				System.out.println(serverCom.getText());
+		        				clientCom = sc.nextLine();
+		        				objectOutputStream.writeObject(new Message("Bet","pending",clientCom));
+		        				serverCom = ((Message) objectInputStream.readObject());	// Await response
+		        			}
+		        			while(serverCom.getStatus().compareTo("failure") == 0);
 		        			System.out.println(serverCom.getText());
 		        		}
 		        		else if (serverCom.getType().compareTo("Error") == 0){
 		        			System.out.println(serverCom.getText());	// Print capitalized text
+		        		}
+		        		else if (serverCom.getType().compareTo("RenderCard") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
+		        		else if (serverCom.getType().compareTo("RenderPlayer") == 0){
+		        			System.out.println(serverCom.getText());
 		        		}
 	        		}
 	        	}

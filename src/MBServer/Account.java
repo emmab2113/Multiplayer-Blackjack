@@ -69,8 +69,10 @@ public class Account {
 		}
 		return false;
 	}
-	public void resetCardsAndBet() {
-		modifyBalance(activeBet * 2); // Temporary line; pay out should be given by table;
+	public void resetCardsAndBet(boolean payOut) {
+		if (payOut) {
+			modifyBalance(activeBet * 2);
+		}
 		activeBet = 0;
 		cards.clear();
 	}

@@ -124,8 +124,9 @@ public class Server {
     				if (login) {
     					if (line.getType().compareTo("LogOut") == 0) {	// Sever client connection on logout
     						account.signOut();
+    						save();
     						account = null;
-    						out.writeObject(new Message("Disconnected","success","NA"));
+    						out.writeObject(new Message("LogOut","success","NA"));
     					}
     					else if (line.getType().compareTo("text") == 0) {	// Capitalize contents of text Message
     						String capitalInput = line.getText();			// Return new text to client
@@ -138,9 +139,6 @@ public class Server {
     					}
     					else if (line.getType().compareTo("TableLeave") == 0) {	// Capitalize contents of text Message
     						removeFromTable();
-    					}
-    					else if (line.getType().compareTo("MakeTable") == 0) {	// Capitalize contents of text Message
-    						makeTable();
     					}
     					else if (line.getType().compareTo("LogIn") == 0) {	// Capitalize contents of text Message
     						String accountInfo = line.getText();
@@ -169,10 +167,6 @@ public class Server {
     						else {
     							informClientOfError(ErrorType.TypeError);
     						}
-    					}
-    					else if (line.getType().compareTo("SignOut") == 0) {	// Capitalize contents of text Message
-    						account.signOut();
-    						writeMessage(new Message("SignOut","success","NA"));
     					}
     					else if (line.getType().compareTo("TimeOut") == 0) {	// Capitalize contents of text Message
     						if (account.isTimedOut()) {
@@ -231,6 +225,19 @@ public class Server {
 	    						informClientOfError(ErrorType.TypeError);
 	    					}
 	    				}
+	    				else if (line.getType().compareTo("RequestBet") == 0) {	// Capitalize contents of text Message
+    						askForBets();
+    						writeMessage(new Message("Bet", "success", "Your wager is set"));
+    					}
+	    				else if (line.getType().compareTo("GameAction") == 0) {	// Capitalize contents of text Message
+    						askForAction();
+    					}
+	    				else if (line.getType().compareTo("RenderCard") == 0) {	// Capitalize contents of text Message
+    						getGameCards();
+    					}
+	    				else if (line.getType().compareTo("RenderPlayer") == 0) {	// Capitalize contents of text Message
+    						getGameUsers();
+    					}
     				}
     				else {	// Only listen for login TestMessages if client is not logged in
     					if (line.getType().compareTo("login") == 0) {
@@ -269,8 +276,13 @@ public class Server {
     		
     		// Join table
 //    		writeMessage(new Message("GetTable","success","table info"));
+    		if (availableTables.size() == 0) {
+    			makeTable();
+    		}
     		seatedAt = availableTables.get(0);
     		seatedAt.addUserToTable(this);
+    		seatedAt.startGame(); // TEMPORARY TESTING CODE
+    		writeMessage(new Message ("TableJoin", "success", "NA"));
     	}
     	
     	public void makeTable() {
@@ -340,15 +352,18 @@ public class Server {
     		if (errorType == ErrorType.TypeError) {
 				writeMessage(new Message("Error","failure","timedOutResponse"));
 			}
-    		if (errorType == ErrorType.TimedOut) {
-    			writeMessage(new Message("Error","failure", "Seconds remaining for timeout:" + account.getTimeOut()));
+    		else if (errorType == ErrorType.TimedOut) {
+    			writeMessage(new Message("Error","failure", "Seconds remaining for timeout: " + account.getTimeOut()));
+    		}
+    		else if (errorType == ErrorType.CannotWithdraw) {
+    			writeMessage(new Message("Error","failure", "You have insufficient funds: " + account.getBalance()));
     		}
     	}
     	
     	public void askForBets() {
     		try {
     			Message line = new Message();
-				out.writeObject(new Message("RequestBet","success","NA"));
+				writeMessage(new Message("RequestBet","success","Place your bets"));
 				while ((line = (Message) in.readObject()) != null) {
 					if (line.getType().compareTo("Bet") == 0) {
 						if (account.setBet(Double.parseDouble(line.getText()))) {
@@ -369,6 +384,7 @@ public class Server {
     	public void removeFromTable() {
     		seatedAt.queueLeave(this);
     		seatedAt = null;
+    		writeMessage(new Message ("TableLeave", "success", "NA"));
     	}
     	
     	public void askForAction() {
@@ -405,18 +421,20 @@ public class Server {
     		account.receiveCard(card);
     	}
     	
-    	public void restartGame() {
-    		account.resetCardsAndBet();
+    	public void restartGame(boolean payOut) {
+    		account.resetCardsAndBet(payOut);
     	}
     	
     	public void getGameUsers() {
-    		Boolean[] isSeated = new Boolean[6];
+    		boolean[] isSeated = seatedAt.getVacancies();
     		String seatedUsers = "";
-    		for (Boolean seat: isSeated) {
-    			if (seat) {
+    		for (boolean vacant: isSeated) {
+    			if (vacant) {
+    				seatedUsers += "0";
+    			}
+    			else {
     				seatedUsers += "1";
     			}
-    			seatedUsers += "0";
     		}
     		writeMessage(new Message("RenderPlayer","success",seatedUsers));
     	}
@@ -470,11 +488,9 @@ public class Server {
     		File registryFile = new File("accounts.txt");
 			Scanner registryLoader = null;
 			BufferedWriter registryUpdater = null;
-			Boolean foundAccount = false;
 			String newRegistry = "";
 			try {
 				registryLoader = new Scanner(registryFile);
-				registryUpdater = new BufferedWriter(new FileWriter("accounts.txt"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -482,10 +498,8 @@ public class Server {
 			// Read through each entry in registry
 			while(registryLoader.hasNextLine()) {
 				String accountData = registryLoader.nextLine();
-				if (foundAccount) {
-					break;
-				}
-				String[] accountDetails = new String[3];
+				System.out.println(accountData);
+				String[] accountDetails = new String[5];
 				int detailCounter = 0;
 				String detail = "";
 				for (int i = 0; i < accountData.length(); i++) {
@@ -513,6 +527,7 @@ public class Server {
 			}
 			try {
 				registryLoader.close();
+				registryUpdater = new BufferedWriter(new FileWriter("accounts.txt"));
 				registryUpdater.write(newRegistry);
 				registryUpdater.close();
 			} catch (IOException e) {
