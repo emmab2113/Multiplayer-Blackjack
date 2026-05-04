@@ -23,13 +23,7 @@ public class OpenScene implements Scene {
 	public void destruct() {	
 		
 	}
-	public void render() {
-		
-	}	
-	public void update() {
-		
-	}
-	public void handleInput() {
+	public void displayPanel() {
 		
 	}
 
