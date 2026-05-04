@@ -98,7 +98,7 @@ public class Client {
         	System.out.println("\nobject over socket connection failed");
         	return false;
         }
-	}
+	}	
 	public boolean requestLogIn(String username, String password, String credentials) {
 		// send LogIn message to server
     	send(new Message(MessageType.LogIn, MessageStatus.Pending, 
@@ -147,13 +147,14 @@ public class Client {
     	// interpret response: verify successful logout
     	if (responseMessage.getType() == MessageType.LogOut 
     		&& responseMessage.getStatus() == MessageStatus.Success) {
-    		this.loggedIn = true;
+    		this.loggedIn = false;
     		return true;
     	}
     	else {
     		return false;
     	}
 	}
+	// server needs to be changed
 	public double requestBalanceView() {
 		// send BalanceRequest message to server
 		send(new Message(MessageType.BalanceRequest, MessageStatus.Pending));
@@ -170,7 +171,7 @@ public class Client {
 		
 		// throw exception if no balance received
 		throw new IllegalStateException("invalid BalanceRequest response");
-	}	
+	}
 	public double requestBalanceDeposit(Double currency) {
 		// send DepositRequest message to server
 		send(new Message(MessageType.DepositRequest, MessageStatus.Pending, 
@@ -207,41 +208,23 @@ public class Client {
 		// throw exception if no balance received
 		throw new IllegalStateException("invalid WithdrawRequest response");
 	}
-	public String[] GetTables() {
-		// send GetTables message to server
-		send(new Message(MessageType.GetTables, MessageStatus.Pending));
-		
-        // read response message from server
-		Message responseMessage = receive();
-		
-		// interpret response: verify tables returned
-		if (responseMessage.getType() == MessageType.GetTables 
-			&& responseMessage.getStatus() == MessageStatus.Success) {
-			// read tables into string array
-			String[] tableList = responseMessage.getText().split(",");
-			return tableList;
-		}
-		
-		// throw exception if tables not received
-		throw new IllegalStateException("invalid GetTables response");
-	}
 	public boolean joinTable(String tableID) {
 		// send TableJoin message to server
-		send(new Message(MessageType.TableJoin, MessageStatus.Pending, tableID));
+		send(new Message(MessageType.TableJoin, MessageStatus.Pending));
 		
         // read response message from server
 		Message responseMessage = receive();
 		
 		// interpret response: verify table successfully joined
 		if (responseMessage.getType() == MessageType.TableJoin 
-			&& responseMessage.getStatus() == MessageStatus.Success 
-			&& responseMessage.getText() == tableID) {
+			&& responseMessage.getStatus() == MessageStatus.Success) {
 			return true;
 		}
 		else {
 			return false;
 		}
 	}
+	// does this need a response message?
 	public boolean leaveTable() {
 		// send TableLeave message to server
 		send(new Message(MessageType.TableLeave, MessageStatus.Pending));
@@ -258,6 +241,7 @@ public class Client {
 			return false;
 		}
 	}
+	// does this need a response message?
 	public boolean chooseBet(double bet) {
 		// send Bet message to server
 		send(new Message(MessageType.Bet, MessageStatus.Pending, 
@@ -304,6 +288,7 @@ public class Client {
 	}	
 	
 	
+	// need timeout message sender for when player leaves middle of game
 	public void displayGameUsers() {}
 	public void displayGameCards() {}
 	public void displayGameStatus() {}
