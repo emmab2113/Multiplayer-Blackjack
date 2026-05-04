@@ -85,6 +85,10 @@ public class Table {
 	}
 	
 	public void addUserToTable(Server.ClientHandler user) {
+		if (user.isDealer()) {
+			dealer = user;
+			return;
+		}
 		for (int i = 0; i < this.players.length; i++) {
 			if (this.players[i] == null) {
 				this.players[i] = user;

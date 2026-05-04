@@ -58,7 +58,7 @@ public class Driver {
 	        		clientCom = sc.nextLine();	// Type contents of text message to server (or request to logout)
 	        		expectMessage = false;
 	        		if (clientCom.compareTo("LogOut") == 0) {	// Logout, sever server connection, and exit program
-	        			objectOutputStream.writeObject(new Message("logout","pending","Undefined"));
+	        			objectOutputStream.writeObject(new Message("LogOut","pending","Undefined"));
 	        			expectMessage = true;
 	        		}
 	        		else if (clientCom.compareTo("TableJoin") == 0) {
@@ -81,6 +81,18 @@ public class Driver {
 	        		}
 	        		else if (clientCom.compareTo("TimeOut") == 0) {
 	        			objectOutputStream.writeObject(new Message("TimeOut","pending","NA"));
+	        			expectMessage = true;
+	        		}
+	        		else if (clientCom.compareTo("BalanceRequest") == 0) {
+	        			objectOutputStream.writeObject(new Message("BalanceRequest","pending","NA"));
+	        			expectMessage = true;
+	        		}
+	        		else if (clientCom.compareTo("DepositRequest") == 0) {
+	        			objectOutputStream.writeObject(new Message("DepositRequest","pending","25.00"));
+	        			expectMessage = true;
+	        		}
+	        		else if (clientCom.compareTo("WithdrawRequest") == 0) {
+	        			objectOutputStream.writeObject(new Message("WithdrawRequest","pending","-25.00"));
 	        			expectMessage = true;
 	        		}
 	        		else {	// Sent text message to server
@@ -110,9 +122,17 @@ public class Driver {
 		        		else if (serverCom.getType().compareTo("Registered") == 0){
 		        			System.out.println(serverCom.getText());
 		        		}
+		        		else if (serverCom.getType().compareTo("BalanceView") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
+		        		else if (serverCom.getType().compareTo("Deposit") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
+		        		else if (serverCom.getType().compareTo("Withdraw") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
 		        		else if (serverCom.getType().compareTo("Disconnected") == 0){
-		        			login = false;
-		        			return;	// Exit after logging out program
+		        			System.out.println(serverCom.getText());
 		        		}
 		        		else if (serverCom.getType().compareTo("Error") == 0){
 		        			System.out.println(serverCom.getText());	// Print capitalized text

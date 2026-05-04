@@ -7,14 +7,14 @@ import java.util.concurrent.Executors;
 public class Account {
 	private String username;
 	private String password;
-	private String credentials;
+	private boolean credentials;
 	private double balance;
 	private int timeOut;
 	private Vector<Card> cards;
 	private double activeBet;
 	private boolean signedIn;
 	
-	public Account(String username, String password, String credentials) {
+	public Account(String username, String password, boolean credentials) {
 		this.username = username;
 		this.password = password;
 		this.credentials = credentials;
@@ -24,7 +24,7 @@ public class Account {
 		activeBet = 0;
 		signedIn = false;
 	}
-	public Account(String username, String password, String credentials, double balance, int timeOut) {
+	public Account(String username, String password, boolean credentials, double balance, int timeOut) {
 		this.username = username;
 		this.password = password;
 		this.credentials = credentials;
@@ -36,11 +36,11 @@ public class Account {
 		
 	}
 	public boolean modifyBalance(double balance) {
-		double USDBalance = Math.round(balance * 100.0) / 100.0;
-		if (USDBalance * -1 > balance) {
+		double USDBalance = (double) (Math.round(balance * 100.0)) / 100.0;
+		if (this.balance < USDBalance * -1) {
 			return false;
 		}
-		balance += USDBalance;
+		this.balance += USDBalance;
 		return true;
 	}
 	public void setTimeOut(int timer) {
@@ -83,9 +83,9 @@ public class Account {
 		return cards;
 	}
 	
-	public boolean validate(String username, String password, String credentials) {
+	public boolean validate(String username, String password, boolean credentials) {
 		Boolean isValid = (this.username.compareTo(username) == 0 && this.password.compareTo(password) == 0
-				&& this.credentials.compareTo(credentials) == 0 && !signedIn);
+				&& this.credentials == credentials && !signedIn);
 		if (isValid) {
 			signedIn = true;
 			return true;
@@ -104,6 +104,9 @@ public class Account {
 	}
 	public String getUsername() {
 		return username;
+	}
+	public boolean getCredentials() {
+		return credentials;
 	}
 }
 

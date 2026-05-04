@@ -15,7 +15,7 @@ public class AccountTest {
 	
 	@BeforeEach
 	public void testPreparations() {
-		testAccount = new Account("Player123","password","0");
+		testAccount = new Account("Player123","password",false);
 	}
 	
 	@Test
@@ -25,7 +25,7 @@ public class AccountTest {
 	
 	@Test
 	public void complexConstructorTest(){
-		Account testAccount2 = new Account("Player123","password","0", 100.00, 0);
+		Account testAccount2 = new Account("Player123","password",false, 100.00, 0);
 		assertNotNull(testAccount2);
 	}
 	
@@ -52,6 +52,7 @@ public class AccountTest {
 		testAccount.modifyBalance(1);
 		testAccount.modifyBalance(-1);
 		int balanceInInt = (int) testAccount.getBalance();
+		System.out.println(balanceInInt);
 		assertEquals(0, balanceInInt);
 	}
 	

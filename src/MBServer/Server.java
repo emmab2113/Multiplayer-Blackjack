@@ -46,7 +46,7 @@ public class Server {
 				accountDetails[detailCounter] = detail;
 				detail = "";
 				detailCounter++;
-				accountRegistry.add(new Account(accountDetails[0],accountDetails[1],accountDetails[2],
+				accountRegistry.add(new Account(accountDetails[0],accountDetails[1],Boolean.parseBoolean(accountDetails[2]),
 						Double.parseDouble(accountDetails[3]),Integer.parseInt(accountDetails[4])));
 			}
 			
@@ -123,10 +123,9 @@ public class Server {
     			while ((line = (Message) in.readObject()) != null) {
     				if (login) {
     					if (line.getType().compareTo("LogOut") == 0) {	// Sever client connection on logout
-    						login = false;
+    						account.signOut();
+    						account = null;
     						out.writeObject(new Message("Disconnected","success","NA"));
-    						clientSocket.close();
-    						return;
     					}
     					else if (line.getType().compareTo("text") == 0) {	// Capitalize contents of text Message
     						String capitalInput = line.getText();			// Return new text to client
@@ -164,7 +163,7 @@ public class Server {
     						accountDetails[detailCounter] = detail;
     						detail = "";
     						detailCounter++;
-    						if(logIn(accountDetails[0], accountDetails[1], accountDetails[2])) {
+    						if(logIn(accountDetails[0], accountDetails[1], Boolean.parseBoolean(accountDetails[2]))) {
     							out.writeObject(new Message("LogIn","success","NA"));
     						}
     						else {
@@ -203,7 +202,7 @@ public class Server {
     						accountDetails[detailCounter] = detail;
     						detail = "";
     						detailCounter++;
-    						if (register(accountDetails[0], accountDetails[1], accountDetails[2])) {
+    						if (register(accountDetails[0], accountDetails[1], Boolean.parseBoolean(accountDetails[2]))) {
     							writeMessage(new Message("Registered","success","NA"));
     						}
     						else {
@@ -219,14 +218,18 @@ public class Server {
 	    						String playerBalance = String.valueOf(getPlayerBalance());
 	    						writeMessage(new Message("Deposit","success", playerBalance));
 	    					}
-	    					informClientOfError(ErrorType.TypeError);
+	    					else {
+	    						informClientOfError(ErrorType.TypeError);
+	    					}
 	    				}
 	    				else if (line.getType().compareTo("WithdrawRequest") == 0) {
-	    					if (addToPlayerBalance(Double.parseDouble(line.getText()))) {
+	    					if (chargePlayerBalance(Double.parseDouble(line.getText()))) {
 	    						String playerBalance = String.valueOf(getPlayerBalance());
 	    						writeMessage(new Message("Withdraw","success", playerBalance));
 	    					}
-	    					informClientOfError(ErrorType.TypeError);
+	    					else {
+	    						informClientOfError(ErrorType.TypeError);
+	    					}
 	    				}
     				}
     				else {	// Only listen for login TestMessages if client is not logged in
@@ -279,7 +282,7 @@ public class Server {
     		account.setTimeOut(300);
     	}
     	
-    	public synchronized boolean register(String username, String password, String credentials) {
+    	public synchronized boolean register(String username, String password, boolean credentials) {
     		for (Account existingAccount: accountRegistry) {
     			if (existingAccount.getUsername().compareTo(username) == 0) {
     				return false;
@@ -305,7 +308,7 @@ public class Server {
     		return false;
     	}
     	
-    	public boolean logIn(String username, String password, String credentials) {
+    	public boolean logIn(String username, String password, boolean credentials) {
     		for (Account existingAccount: accountRegistry) {
     			if (existingAccount.validate(username, password, credentials)) {
     				account = existingAccount;
@@ -415,11 +418,7 @@ public class Server {
     			}
     			seatedUsers += "0";
     		}
-    		try {
-				out.writeObject(new Message("RenderPlayer","success",seatedUsers));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+    		writeMessage(new Message("RenderPlayer","success",seatedUsers));
     	}
     	
     	public void getGameCards() {
@@ -538,6 +537,10 @@ public class Server {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+    	}
+    	
+    	public boolean isDealer() {
+    		return account.getCredentials();
     	}
     }
 }
