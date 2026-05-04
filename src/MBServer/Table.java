@@ -18,6 +18,8 @@ public class Table {
 		this.shoe = new CardDeck(6);
 		this.shoe.shuffle();
 		this.cardsDrawn = new Vector<>();
+		this.shoe.reset();
+		this.shoe.shuffle();
 		
 		this.gameActive = false;
 		this.dealerLeave = false;
@@ -33,8 +35,10 @@ public class Table {
 				this.players[this.playersTurn].addCard(drawCard());
 			}
 		}
-		this.dealer.addCard(drawCard());
-		this.dealer.addCard(drawCard());
+		if (hasDealer()) {
+			this.dealer.addCard(drawCard());
+			this.dealer.addCard(drawCard());
+		}
 		this.timer = 42;
 	}
 	
@@ -140,7 +144,8 @@ public class Table {
 		return this.cardsDrawn;
 	}
 	
-	public boolean playerStoodOrBust() {
-		return this.players[this.playersTurn].getStoodOrBust();
+	public void playerStoodOrBust() {
+		this.playersTurn++;
+		nextTurn();
 	}
 }
