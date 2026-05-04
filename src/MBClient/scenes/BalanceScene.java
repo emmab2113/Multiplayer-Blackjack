@@ -1,5 +1,7 @@
 package MBClient.scenes;
 
+import javax.swing.JPanel;
+
 import MBClient.Client;
 import MBClient.GUI;
 import MBClient.Scene;
@@ -7,6 +9,8 @@ import MBClient.Scene;
 public class BalanceScene implements Scene {
 	private GUI gui;
 	private Client client;
+	
+	private JPanel basePanel;
 	
 	// ====== CONSTRUCTOR ===== //
 	
@@ -23,8 +27,8 @@ public class BalanceScene implements Scene {
 	public void destruct() {	
 		
 	}
-	public void displayPanel() {
-		
+	public JPanel getPanel() {
+		return basePanel;
 	}
 
 }

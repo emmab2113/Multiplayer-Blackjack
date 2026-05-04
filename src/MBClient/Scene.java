@@ -1,7 +1,9 @@
 package MBClient;
 
+import javax.swing.JPanel;
+
 public interface Scene {
 	void construct();
 	void destruct();	
-	void displayPanel();
+	JPanel getPanel();
 }
