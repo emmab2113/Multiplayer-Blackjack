@@ -6,9 +6,9 @@ import enums.MessageStatus;
 import enums.MessageType;
 
 public class Message implements Serializable {
-    protected MessageType type;
-    protected MessageStatus status;
-    protected String text;
+    protected final MessageType type;
+    protected final MessageStatus status;
+    protected final String text;
 
     public Message() {
         this.type = MessageType.Test;
