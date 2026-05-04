@@ -31,7 +31,6 @@ public class Table {
 			if (player != null) {
 				this.players[this.playersTurn].addCard(drawCard());
 				this.players[this.playersTurn].addCard(drawCard());
-				return; // TEMPORARY TESTING CODE
 			}
 		}
 		this.dealer.addCard(drawCard());
@@ -40,21 +39,27 @@ public class Table {
 	}
 	
 	public void nextTurn () {
-		if (playerStoodOrBust() && this.players[this.playersTurn] != null) {
-			this.timer = 42;
-			this.players[this.playersTurn].askForAction();
+		int playersStoodOrBust = 0;
+		while (playersTurn < players.length) {
+			Server.ClientHandler currentPlayer = players[playersTurn];
+			
+			if (currentPlayer != null && !currentPlayer.getStoodOrBust()) {
+				this.timer = 42;
+				currentPlayer.askForAction();
+				return;
+			}
+			playersTurn++;
+			if (playersTurn == players.length) {
+				playersTurn = 0;
+			}
 		}
-		this.playersTurn++;
-		if (this.playersTurn == this.players.length) {
-			this.playersTurn = 0;
-		}
+		endGame();
 	}
 	
 	public void endGame() {
 		this.shoe.reset();
 		this.shoe.shuffle();
 		this.cardsDrawn.clear();
-		this.playersTurn = 0;
 		this.timer = 42;
 		
 		this.gameActive = false;
@@ -86,7 +91,7 @@ public class Table {
 	}
 	
 	public void addUserToTable(Server.ClientHandler user) {
-		if (user.isDealer()) {
+		if (user.isDealer() && this.dealer == null) {
 			dealer = user;
 			return;
 		}

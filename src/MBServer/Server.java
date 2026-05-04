@@ -135,7 +135,12 @@ public class Server {
     						
     					}
     					else if (line.getType().compareTo("TableJoin") == 0) {	// Capitalize contents of text Message
-    						lookForTable();
+    						if (seatedAt == null) {
+    							lookForTable();
+    						}
+    						else {
+    							informClientOfError(ErrorType.TypeError);
+    						}
     					}
     					else if (line.getType().compareTo("TableLeave") == 0) {	// Capitalize contents of text Message
     						removeFromTable();
@@ -267,27 +272,60 @@ public class Server {
     		}
     	}
     	
-    	public void lookForTable() {
+    	public synchronized void lookForTable() {
     		// Do not let client look for table if timed out
     		if (account.isTimedOut()) {
     			informClientOfError(ErrorType.TimedOut);
     			return;
     		}
     		
-    		// Join table
-//    		writeMessage(new Message("GetTable","success","table info"));
+    		boolean foundASeat = false;
     		if (availableTables.size() == 0) {
     			makeTable();
     		}
-    		seatedAt = availableTables.get(0);
-    		seatedAt.addUserToTable(this);
-    		seatedAt.startGame(); // TEMPORARY TESTING CODE
+    		if (isDealer()) {
+    			for (int i = 0; i < availableTables.size(); i++) {
+        			if (foundASeat) {
+        				break;
+        			}
+        			seatedAt = availableTables.get(i);
+        			if (!seatedAt.hasDealer()) {
+        				seatedAt.addUserToTable(this);
+        				foundASeat = true;
+        			}
+        		}
+    		}
+    		else {
+    			int leastTablePopulation = 7;
+    			Vector<Integer> tablePopulation = new Vector<Integer>();
+    			for (int i = 0; i < availableTables.size(); i++) {
+        			seatedAt = availableTables.get(i);
+        			tablePopulation.add(seatedAt.getPlayerCount());
+        			if (leastTablePopulation > seatedAt.getPlayerCount()) {
+        				leastTablePopulation = seatedAt.getPlayerCount();
+        			}
+        		}
+    			if (leastTablePopulation == 6) {
+    				makeTable();
+    				leastTablePopulation = 0;
+    			}
+    			for (int i = 0; i < availableTables.size(); i++) {
+    				if (foundASeat) {
+        				break;
+        			}
+    				if (tablePopulation.get(i) < 6 && tablePopulation.get(i) == leastTablePopulation) {
+    					foundASeat = true;
+    					seatedAt = availableTables.get(i);
+    					seatedAt.addUserToTable(this);
+    				}
+    			}
+    		}
     		writeMessage(new Message ("TableJoin", "success", "NA"));
     	}
     	
-    	public void makeTable() {
+    	public synchronized void makeTable() {
     		// Add a new table
-    		availableTables.add(new Table());
+    		availableTables.insertElementAt(new Table(), 0);
     	}
     	
     	public void timeOut() {
@@ -390,7 +428,7 @@ public class Server {
     	public void askForAction() {
     		try {
     			Message line = new Message();
-				out.writeObject(new Message("GameAction","success","Choose Hit or Stand"));
+				writeMessage(new Message("GameAction","success","Choose Hit or Stand"));
 				if ((line = (Message) in.readObject()) != null) {
 					if (line.getType().compareTo("Stand") == 0) {
 						standRequest();
