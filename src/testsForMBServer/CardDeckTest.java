@@ -100,7 +100,7 @@ class CardDeckTest {
 		deck.addMaxDecks();
 		
 		int totalCards = 0;
-		while (deck.pullCard() != null); {
+		while (deck.pullCard() != null) {
 			totalCards++;
 		}
 		
