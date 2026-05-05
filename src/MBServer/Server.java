@@ -494,7 +494,7 @@ public class Server {
     	
     	public void getGameCards() {
     		String allCards = "";
-    		Vector<Card>[] drawnCards = seatedAt.getCardsDrawn();
+    		Vector<Card>[] drawnCards = seatedAt.getAllUsersHands();
     		for (int i = 0; i < drawnCards.length; i++) {
     			if (drawnCards[i]!= null) {
     				allCards += ":" + i + ":";
