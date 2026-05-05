@@ -38,10 +38,13 @@ public class GUI {
 			mainFrame.remove(currentScene.getPanel());
 		}
 		
+		// set new scene
 		currentScene = newScene;
 		
+		// update panel
 		mainFrame.add(currentScene.getPanel());
 		
+		// redraw components
 		mainFrame.revalidate();
 		mainFrame.repaint();
 	

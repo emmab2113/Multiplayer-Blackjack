@@ -1,5 +1,6 @@
 player123,password,0,96.0,0
 dealer456,wordpass,1,0,0
 playerEpic,password,0,0.00,0
-xxx,123,false,118.0,0
+xxx,123,false,120.0,0
 www,123,false,0.00,0
+zzz,123,false,0.0,0

@@ -160,7 +160,6 @@ public class Client {
     		return false;
     	}
 	}
-	// server needs to be changed
 	public double requestBalanceView() {
 		// send BalanceRequest message to server
 		send(new Message(MessageType.BalanceRequest, MessageStatus.Pending));
@@ -234,7 +233,6 @@ public class Client {
 			return false;
 		}
 	}
-	// does this need a response message?
 	public boolean leaveTable() {
 		// send TableLeave message to server
 		send(new Message(MessageType.TableLeave, MessageStatus.Pending));
@@ -252,7 +250,6 @@ public class Client {
 			return false;
 		}
 	}
-	// does this need a response message?
 	public boolean chooseBet(double bet) {
 		// send Bet message to server
 		send(new Message(MessageType.Bet, MessageStatus.Pending, 
