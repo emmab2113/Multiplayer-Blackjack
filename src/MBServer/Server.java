@@ -441,19 +441,20 @@ public class Server {
     		try {
     			Message line = new Message();
 				writeMessage(new Message("GameAction","success","Choose Hit or Stand"));
-				if (isDealer()) {	// Dealers turn is taken automatically
-					while (checkRanks() < standAt) {
-						hitRequest();
-					}
-					standRequest();
-					return;
-				}
 				if ((line = (Message) in.readObject()) != null) {
 					if (line.getType().compareTo("Stand") == 0) {
 						standRequest();
 					}
 					if (line.getType().compareTo("Hit") == 0) {
 						hitRequest();
+					}
+					if (line.getType().compareTo("Dealer") == 0) {
+						if (isDealer()) {	// Dealers turn is taken automatically
+							while (checkRanks() < standAt) {
+								hitRequest();
+							}
+							standRequest();
+						}
 					}
 				}
 			} catch (IOException e) {

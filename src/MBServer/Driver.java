@@ -109,10 +109,15 @@ public class Driver {
 	        			objectOutputStream.writeObject(new Message("RenderPlayer","pending","NA"));
 	        			expectMessage = true;
 	        		}
+	        		else if (clientCom.compareTo("StartGame") == 0) {
+	        			objectOutputStream.writeObject(new Message("StartGame","pending","NA"));
+	        			expectMessage = true;
+	        		}
 	        		else {	// Sent text message to server
 	        			objectOutputStream.writeObject(new Message("text","pending",clientCom));
 	        			expectMessage = true;
 	        		}
+	        		
 	        		
 	        		if (expectMessage) {
 	        			serverCom = ((Message) objectInputStream.readObject());	// Await response
@@ -128,6 +133,9 @@ public class Driver {
 			        		}
 		        			else if (clientCom.compareTo("Stand") == 0) {
 		        				objectOutputStream.writeObject(new Message("Stand","pending","Undefined"));
+		        			}
+		        			else if (clientCom.compareTo("Dealer") == 0) {
+		        				objectOutputStream.writeObject(new Message("Dealer","pending","Undefined"));
 		        			}
 		        			serverCom = ((Message) objectInputStream.readObject());
 		        			System.out.println(serverCom.getText());
@@ -170,6 +178,9 @@ public class Driver {
 		        			System.out.println(serverCom.getText());
 		        		}
 		        		else if (serverCom.getType().compareTo("RenderPlayer") == 0){
+		        			System.out.println(serverCom.getText());
+		        		}
+		        		else if (serverCom.getType().compareTo("StartGame") == 0){
 		        			System.out.println(serverCom.getText());
 		        		}
 	        		}
