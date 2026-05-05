@@ -502,13 +502,17 @@ public class Server {
     	}
     	
     	public void getGameCards() {
-    		String allRanks = "";
-    		Vector<Card> hand = seatedAt.getCardsDrawn();
-    		for (Card card: hand) {
-    			allRanks += card.getSuit();
-    			allRanks += card.getRank();
+    		String allCards = "";
+    		Vector<Card>[] drawnCards = seatedAt.getCardsDrawn();
+    		for (int i = 0; i < drawnCards.length; i++) {
+    			allCards += ":" + i + ":";
+    			for (Card card: drawnCards[i]){
+        			allCards += card.getSuit();
+        			allCards += card.getRank();
+        			allCards += ",";
+    			}
     		}
-    		writeMessage(new Message("RenderCard","success",allRanks));
+    		writeMessage(new Message("RenderCard","success",allCards));
     	}
     	
     	public int checkRanks() {
@@ -629,6 +633,10 @@ public class Server {
     		if (isDealer()) {
     			seatedAt.dealerCancelledGame();
     		}
+    	}
+    	
+    	public Vector<Card> getHand() {
+    		return account.getCards();
     	}
     }
 }

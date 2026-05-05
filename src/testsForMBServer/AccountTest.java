@@ -54,7 +54,6 @@ public class AccountTest {
 		testAccount.modifyBalance(1);
 		testAccount.modifyBalance(-1);
 		int balanceInInt = (int) testAccount.getBalance();
-		System.out.println(balanceInInt);
 		assertEquals(0, balanceInInt);
 	}
 	

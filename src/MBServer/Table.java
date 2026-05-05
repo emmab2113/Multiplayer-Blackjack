@@ -138,8 +138,17 @@ public class Table {
 		return vacancies;
 	}
 	
-	public Vector<Card> getCardsDrawn() {
-		return this.cardsDrawn;
+	public Vector<Card>[] getCardsDrawn() {
+		Vector<Card>[] allUsersHands = new Vector[7];
+		for (int i = 0; i < this.players.length; i++) {
+			if (this.players[i] != null) {
+				allUsersHands[i] = this.players[i].getHand();
+			}
+		}
+		if (hasDealer()) {
+			allUsersHands[6] = this.dealer.getHand();
+		}
+		return allUsersHands;
 	}
 	
 	public void playerStoodOrBust() {
