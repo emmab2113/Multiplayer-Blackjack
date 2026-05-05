@@ -294,6 +294,12 @@ public class Server {
         				foundASeat = true;
         			}
         		}
+    			if (!foundASeat) {
+    				makeTable();
+    				seatedAt = availableTables.elementAt(0);
+    				seatedAt.addUserToTable(this);
+    				foundASeat = true;
+    			}
     		}
     		else {
     			int leastTablePopulation = 7;
