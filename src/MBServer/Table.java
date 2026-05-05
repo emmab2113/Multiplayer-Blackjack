@@ -31,10 +31,12 @@ public class Table {
 		this.gameActive = true;
 		for (Server.ClientHandler player : this.players) {
 			if (player != null) {
-				this.players[this.playersTurn].addCard(drawCard());
-				this.players[this.playersTurn].addCard(drawCard());
+				player.getGameUsers();
+				player.addCard(drawCard());
+				player.addCard(drawCard());
 			}
 		}
+		this.dealer.getGameUsers();
 		this.dealer.addCard(drawCard());
 		this.dealer.addCard(drawCard());
 		this.timer = 42;
@@ -75,6 +77,12 @@ public class Table {
 		if (pulled != null) {
 			this.cardsDrawn.add(pulled);
 		}
+		for (Server.ClientHandler player : this.players) {
+			if (player != null) {
+				player.getGameCards();
+			}
+		}
+		this.dealer.getGameCards();
 		return pulled;
 	}
 	
@@ -128,6 +136,12 @@ public class Table {
 				return;
 			}
 		}
+		for (Server.ClientHandler player : this.players) {
+			if (player != null) {
+				player.getGameUsers();
+			}
+		}
+		this.dealer.getGameUsers();
 	}
 
 	public boolean[] getVacancies() {
