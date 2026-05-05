@@ -50,16 +50,16 @@ basePanel = new JPanel();
 		JPanel dealerPanel = new JPanel();
 		JPanel buttonPanel = new JPanel();
 		
-		JButton hitButton = new JButton("hit");
-		JButton standButton = new JButton("stand");
+		JButton startGameButton = new JButton("start game");
+		JButton startTurnButton = new JButton("start turn");
 		JButton leaveButton = new JButton("leave");
 		
-		hitButton.addActionListener(new ActionListener() {
+		startGameButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
 			}
 		});
-		standButton.addActionListener(new ActionListener() {
+		startTurnButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
 			}
@@ -83,9 +83,9 @@ basePanel = new JPanel();
 		JPanel otherPlayerPanel5 = new JPanel();
 		JPanel otherPlayerPanel6 = new JPanel();
 		
-		rightPanel.add(otherPlayerPanel3);
 		rightPanel.add(otherPlayerPanel4);
 		rightPanel.add(otherPlayerPanel5);
+		rightPanel.add(otherPlayerPanel6);
 		
 		basePanel.add(leftPanel);
 		basePanel.add(centerPanel);
