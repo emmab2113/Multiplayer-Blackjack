@@ -134,7 +134,7 @@ public class Server {
 						account.signOut();
 						save();
 						account = null;
-						out.writeObject(new Message(MessageType.Connected, MessageStatus.Success));
+						out.writeObject(new Message(MessageType.LogOut, MessageStatus.Success));
 						out.flush();
 					}
 					else if (line.getType() == MessageType.TableJoin) {	// Capitalize contents of text Message
