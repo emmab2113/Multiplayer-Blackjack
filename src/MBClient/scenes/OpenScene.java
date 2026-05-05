@@ -23,6 +23,8 @@ public class OpenScene implements Scene {
 		this.gui = gui;
 		this.client = client;
 		
+		basePanel = new JPanel();
+		
 		// set base panel layout
 		// GridLayout divides container into fixed grid of equal cells
 		basePanel.setLayout(new GridLayout(1, 2)); // 1 row, 2 columns
@@ -53,12 +55,6 @@ public class OpenScene implements Scene {
 	
 	// ===== PUBLIC METHODS ==== //
 	
-	public void construct() {
-		
-	}
-	public void destruct() {	
-		
-	}
 	public JPanel getPanel() {
 		return basePanel;
 	}

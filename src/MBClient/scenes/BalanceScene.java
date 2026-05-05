@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -25,6 +26,8 @@ public class BalanceScene implements Scene {
 		this.gui = gui;
 		this.client = client;
 		
+		basePanel = new JPanel();
+		
 		// set base panel layout
 		// GridLayout divides container into fixed grid of equal cells
 		basePanel.setLayout(new GridLayout(1, 2)); // 1 row, 2 columns
@@ -37,10 +40,12 @@ public class BalanceScene implements Scene {
 		// balance display
 		
 		// create text field for balance
-		JTextField balanceDisplay = new JTextField(5);
+		JLabel balanceDisplay = new JLabel();
 		
 		// get current balance from server
 		double balance = client.requestBalanceView();
+		
+		balanceDisplay.setText(String.valueOf(balance));
 		
 		// add components to left panel
 		leftPanel.add(balanceDisplay);
@@ -50,7 +55,7 @@ public class BalanceScene implements Scene {
 		
 		// set right panel layout
 		// GridLayout divides container into fixed grid of equal cells
-		basePanel.setLayout(new GridLayout(2, 1)); // 1 row, 2 columns
+		rightPanel.setLayout(new GridLayout(3, 1)); // 3 row, 1 columns
 		
 		// create action buttons
 		JButton depositButton = new JButton("deposit");
@@ -64,7 +69,7 @@ public class BalanceScene implements Scene {
 				// display pop up to get deposit amount
 				double deposit = Double.parseDouble(JOptionPane.showInputDialog("enter deposit amount: "));
 				// validate
-				if (deposit < 0) {
+				while (deposit < 0) {
 					deposit = Double.parseDouble(JOptionPane.showInputDialog("invalid input. enter deposit amount: "));
 				}
 				// try deposit
@@ -78,10 +83,17 @@ public class BalanceScene implements Scene {
 			public void actionPerformed(ActionEvent e) {
 				// if withdraw: 
 				// get withdraw amount
-				double withdraw = Double.parseDouble(JOptionPane.showInputDialog("enter withdraw amount: "));
+				String input = JOptionPane.showInputDialog("enter withdraw amount: ");
+				if (input == null) return;
+				
 				// validate
-				if (withdraw < 0 || withdraw > balance) {
-					withdraw = Double.parseDouble(JOptionPane.showInputDialog("invalid input. enter deposit amount: "));
+				double withdraw = Double.parseDouble(input);
+				
+				double currentBalance = client.requestBalanceView();
+				while (withdraw < 0 || withdraw > currentBalance) {
+					input = JOptionPane.showInputDialog("invalid input. enter withdraw amount: ");
+					if (input == null) return;
+					withdraw = Double.parseDouble(input);
 				}
 				// try withdraw
 				double updatedBalance = client.requestBalanceWithdrawal(withdraw);
@@ -109,12 +121,6 @@ public class BalanceScene implements Scene {
 	
 	// ===== PUBLIC METHODS ==== //
 	
-	public void construct() {
-		
-	}
-	public void destruct() {	
-		
-	}
 	public JPanel getPanel() {
 		return basePanel;
 	}

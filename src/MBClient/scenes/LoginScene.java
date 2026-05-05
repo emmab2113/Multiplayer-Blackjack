@@ -28,9 +28,11 @@ public class LoginScene implements Scene {
 		this.gui = gui;
 		this.client = client;
 		
+		basePanel = new JPanel();
+		
 		// set base panel layout
 		// GridLayout divides container into fixed grid of equal cells
-		basePanel.setLayout(new GridLayout(4, 1)); // 3 rows, 1 columns
+		basePanel.setLayout(new GridLayout(4, 1)); // 4 rows, 1 columns
 		
 		// drop down menu for credential selection
 		String[] credentials = {"player", "dealer"};
@@ -64,8 +66,13 @@ public class LoginScene implements Scene {
 		passRow.add(passLabel);
 		passRow.add(passField);
 		
+		JPanel buttonsPanel = new JPanel();
+		
+		buttonsPanel.setLayout(new GridLayout(1, 2));
+		
 		// create login button
 		JButton loginButton = new JButton("login");
+		JButton backButton = new JButton("back");
 		
 		// create action listener
 		loginButton.addActionListener(new ActionListener() {
@@ -80,10 +87,10 @@ public class LoginScene implements Scene {
 				// try login
 				if (client.requestLogIn(user, pass, cred)) {
 					// if success, move to main menu depending on credentials
-					if (cred == "player") {
+					if (cred.equals("player")) {
 						gui.setScene(new PlayerMainScene(gui, client));
 					}
-					else if (cred == "dealer") {
+					else if (cred.equals("dealer")) {
 						gui.setScene(new DealerMainScene(gui, client));
 					}
 				}
@@ -99,22 +106,25 @@ public class LoginScene implements Scene {
 				}
 			}
 		});
+		backButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// if back: move back to PlayMainScene
+				gui.setScene(new OpenScene(gui, client));
+			}
+		});
+		
+		buttonsPanel.add(loginButton);
+		buttonsPanel.add(backButton);
 		
 		// add parts to panel
 		basePanel.add(credDropdown);
 		basePanel.add(userRow);
 		basePanel.add(passRow);
-		basePanel.add(loginButton);
+		basePanel.add(buttonsPanel);
 	}
 	
 	// ===== PUBLIC METHODS ==== //
 	
-	public void construct() {
-		
-	}
-	public void destruct() {	
-		
-	}
 	public JPanel getPanel() {
 		return basePanel;
 	}

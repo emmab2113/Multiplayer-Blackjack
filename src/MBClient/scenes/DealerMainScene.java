@@ -24,6 +24,8 @@ public class DealerMainScene implements Scene {
 		this.gui = gui;
 		this.client = client;
 		
+		basePanel = new JPanel();
+		
 		// set base panel layout
 		// GridLayout divides container into fixed grid of equal cells
 		basePanel.setLayout(new GridLayout(1, 2)); // 1 row, 2 columns
@@ -35,7 +37,13 @@ public class DealerMainScene implements Scene {
 		// create action listeners
 		hostButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-								
+				// if host: add dealer to table, move to DealerTableScene
+				if (client.joinTable()) {
+					gui.setScene(new DealerTableScene(gui, client));
+				}
+				else {
+					JOptionPane.showMessageDialog(null, "table join failed.");
+				}
 			}
 		});
 		logoutButton.addActionListener(new ActionListener() {
@@ -51,16 +59,13 @@ public class DealerMainScene implements Scene {
 			}
 		});
 		
+		// add components to base panel
+		basePanel.add(hostButton);
+		basePanel.add(logoutButton);
 	}
 	
 	// ===== PUBLIC METHODS ==== //
 	
-	public void construct() {
-		
-	}
-	public void destruct() {	
-		
-	}
 	public JPanel getPanel() {
 		return basePanel;
 	}

@@ -35,7 +35,7 @@ public class GUI {
 	public void setScene(Scene newScene) {
 		// check if there is a scene open already
 		if (currentScene != null) {
-			currentScene.destruct();
+			mainFrame.remove(currentScene.getPanel());
 		}
 		
 		currentScene = newScene;
@@ -44,8 +44,6 @@ public class GUI {
 		
 		mainFrame.revalidate();
 		mainFrame.repaint();
-		
-		currentScene.construct();
 	
 	}
 	

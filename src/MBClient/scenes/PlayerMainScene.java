@@ -24,6 +24,8 @@ public class PlayerMainScene implements Scene {
 		this.gui = gui;
 		this.client = client;
 		
+		basePanel = new JPanel();
+		
 		// set base panel layout
 		// GridLayout divides container into fixed grid of equal cells
 		basePanel.setLayout(new GridLayout(1, 3)); // 1 row, 3 columns
@@ -43,8 +45,13 @@ public class PlayerMainScene implements Scene {
 		});
 		playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// if play: move to PlayerTableScene
-				gui.setScene(new PlayerTableScene(gui, client));
+				// if play: add player to table, move to PlayerTableScene
+				if (client.joinTable()) {
+					gui.setScene(new PlayerTableScene(gui, client));
+				}
+				else {
+					JOptionPane.showMessageDialog(null, "table join failed.");
+				}
 			}
 		});
 		logoutButton.addActionListener(new ActionListener() {
@@ -68,12 +75,6 @@ public class PlayerMainScene implements Scene {
 	
 	// ===== PUBLIC METHODS ==== //
 	
-	public void construct() {
-		
-	}
-	public void destruct() {	
-		
-	}
 	public JPanel getPanel() {
 		return basePanel;
 	}

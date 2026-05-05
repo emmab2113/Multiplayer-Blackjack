@@ -28,9 +28,11 @@ public class RegisterScene implements Scene {
 		this.gui = gui;
 		this.client = client;
 		
+		basePanel = new JPanel();
+		
 		// set base panel layout
 		// GridLayout divides container into fixed grid of equal cells
-		basePanel.setLayout(new GridLayout(4, 1)); // 3 rows, 1 columns
+		basePanel.setLayout(new GridLayout(4, 1)); // 4 rows, 1 columns
 		
 		// drop down menu for credential selection
 		String[] credentials = {"player", "dealer"};
@@ -64,8 +66,13 @@ public class RegisterScene implements Scene {
 		passRow.add(passLabel);
 		passRow.add(passField);
 		
+		JPanel buttonsPanel = new JPanel();
+		
+		buttonsPanel.setLayout(new GridLayout(1, 2));
+		
 		// create login button
-		JButton registerButton = new JButton("login");
+		JButton registerButton = new JButton("register");
+		JButton backButton = new JButton("back");
 		
 		// create action listener
 		registerButton.addActionListener(new ActionListener() {
@@ -82,10 +89,10 @@ public class RegisterScene implements Scene {
 				// try register
 				if (client.requestRegistry(user, pass, cred)) {
 					// if success, move to main menu depending on credentials
-					if (cred == "player") {
+					if (cred.equals("player")) {
 						gui.setScene(new PlayerMainScene(gui, client));
 					}
-					else if (cred == "dealer") {
+					else if (cred.equals("dealer")) {
 						gui.setScene(new DealerMainScene(gui, client)); 
 					}
 				}
@@ -101,22 +108,25 @@ public class RegisterScene implements Scene {
 				}
 			}
 		});
+		backButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// if back: move back to PlayMainScene
+				gui.setScene(new OpenScene(gui, client));
+			}
+		});
+		
+		buttonsPanel.add(registerButton);
+		buttonsPanel.add(backButton);
 		
 		// add parts to panel
 		basePanel.add(credDropdown);
 		basePanel.add(userRow);
 		basePanel.add(passRow);
-		basePanel.add(registerButton);
+		basePanel.add(buttonsPanel);
 	}
 	
 	// ===== PUBLIC METHODS ==== //
 	
-	public void construct() {
-		
-	}
-	public void destruct() {	
-		
-	}
 	public JPanel getPanel() {
 		return basePanel;
 	}
