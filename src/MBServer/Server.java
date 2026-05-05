@@ -115,147 +115,138 @@ public class Server {
     	public void run()
     	{
     		// Initialize variables for client communication
-    		boolean login = false;
     		try {
 
     	        // Communicate until client connection is severed
     			Message line;
     			while ((line = (Message) in.readObject()) != null) {
-    				if (login) {
-    					if (line.getType().compareTo("LogOut") == 0) {	// Sever client connection on logout
-    						account.signOut();
-    						save();
-    						account = null;
-    						out.writeObject(new Message("LogOut","success","NA"));
+    				if (line.getType().compareTo("LogOut") == 0) {	// Sever client connection on logout
+						account.signOut();
+						save();
+						account = null;
+						out.writeObject(new Message("LogOut","success","NA"));
+					}
+					else if (line.getType().compareTo("text") == 0) {	// Capitalize contents of text Message
+						String capitalInput = line.getText();			// Return new text to client
+						capitalInput = capitalInput.toUpperCase();
+						out.writeObject(new Message("text","success",capitalInput));
+						
+					}
+					else if (line.getType().compareTo("TableJoin") == 0) {	// Capitalize contents of text Message
+						if (seatedAt == null) {
+							lookForTable();
+						}
+						else {
+							informClientOfError(ErrorType.TypeError);
+						}
+					}
+					else if (line.getType().compareTo("TableLeave") == 0) {	// Capitalize contents of text Message
+						removeFromTable();
+					}
+					else if (line.getType().compareTo("LogIn") == 0) {	// Capitalize contents of text Message
+						String accountInfo = line.getText();
+						String[] accountDetails = new String[3];
+						int detailCounter = 0;
+						String detail = "";
+						for (int i = 0; i < accountInfo.length(); i++) {
+							if (accountInfo.charAt(i) == ',') {
+								if (detailCounter == 2) {
+									break;
+								}
+								accountDetails[detailCounter] = detail;
+								detail = "";
+								detailCounter++;
+							}
+							else {
+								detail += accountInfo.charAt(i);
+							}
+						}
+						accountDetails[detailCounter] = detail;
+						detail = "";
+						detailCounter++;
+						if(logIn(accountDetails[0], accountDetails[1], Boolean.parseBoolean(accountDetails[2]))) {
+							out.writeObject(new Message("LogIn","success","NA"));
+						}
+						else {
+							informClientOfError(ErrorType.TypeError);
+						}
+					}
+					else if (line.getType().compareTo("TimeOut") == 0) {	// Capitalize contents of text Message
+						if (account.isTimedOut()) {
+							informClientOfError(ErrorType.TimedOut);
+						}
+						timeOut();
+						writeMessage(new Message("text","success","Time out started"));
+					}
+					else if (line.getType().compareTo("Register") == 0) {	// Capitalize contents of text Message
+						String accountInfo = line.getText();
+						String[] accountDetails = new String[3];
+						int detailCounter = 0;
+						String detail = "";
+						for (int i = 0; i < accountInfo.length(); i++) {
+							if (accountInfo.charAt(i) == ',') {
+								if (detailCounter == 2) {
+									break;
+								}
+								accountDetails[detailCounter] = detail;
+								detail = "";
+								detailCounter++;
+							}
+							else {
+								detail += accountInfo.charAt(i);
+							}
+						}
+						accountDetails[detailCounter] = detail;
+						detail = "";
+						detailCounter++;
+						if (register(accountDetails[0], accountDetails[1], Boolean.parseBoolean(accountDetails[2]))) {
+							writeMessage(new Message("Registered","success","NA"));
+						}
+						else {
+							informClientOfError(ErrorType.TypeError);
+						}
+					}
+					else if (line.getType().compareTo("BalanceRequest") == 0) {
+    					String playerBalance = String.valueOf(getPlayerBalance());
+    					writeMessage(new Message("BalanceView","success", playerBalance));
+    				}
+					else if (line.getType().compareTo("DepositRequest") == 0) {
+    					if (addToPlayerBalance(Double.parseDouble(line.getText()))) {
+    						String playerBalance = String.valueOf(getPlayerBalance());
+    						writeMessage(new Message("Deposit","success", playerBalance));
     					}
-    					else if (line.getType().compareTo("text") == 0) {	// Capitalize contents of text Message
-    						String capitalInput = line.getText();			// Return new text to client
-    						capitalInput = capitalInput.toUpperCase();
-    						out.writeObject(new Message("text","success",capitalInput));
-    						
-    					}
-    					else if (line.getType().compareTo("TableJoin") == 0) {	// Capitalize contents of text Message
-    						if (seatedAt == null) {
-    							lookForTable();
-    						}
-    						else {
-    							informClientOfError(ErrorType.TypeError);
-    						}
-    					}
-    					else if (line.getType().compareTo("TableLeave") == 0) {	// Capitalize contents of text Message
-    						removeFromTable();
-    					}
-    					else if (line.getType().compareTo("LogIn") == 0) {	// Capitalize contents of text Message
-    						String accountInfo = line.getText();
-    						String[] accountDetails = new String[3];
-    						int detailCounter = 0;
-    						String detail = "";
-    						for (int i = 0; i < accountInfo.length(); i++) {
-    							if (accountInfo.charAt(i) == ',') {
-    								if (detailCounter == 2) {
-    									break;
-    								}
-    								accountDetails[detailCounter] = detail;
-    								detail = "";
-    								detailCounter++;
-    							}
-    							else {
-    								detail += accountInfo.charAt(i);
-    							}
-    						}
-    						accountDetails[detailCounter] = detail;
-    						detail = "";
-    						detailCounter++;
-    						if(logIn(accountDetails[0], accountDetails[1], Boolean.parseBoolean(accountDetails[2]))) {
-    							out.writeObject(new Message("LogIn","success","NA"));
-    						}
-    						else {
-    							informClientOfError(ErrorType.TypeError);
-    						}
-    					}
-    					else if (line.getType().compareTo("TimeOut") == 0) {	// Capitalize contents of text Message
-    						if (account.isTimedOut()) {
-    							informClientOfError(ErrorType.TimedOut);
-    						}
-    						timeOut();
-    						writeMessage(new Message("text","success","Time out started"));
-    					}
-    					else if (line.getType().compareTo("Register") == 0) {	// Capitalize contents of text Message
-    						String accountInfo = line.getText();
-    						String[] accountDetails = new String[3];
-    						int detailCounter = 0;
-    						String detail = "";
-    						for (int i = 0; i < accountInfo.length(); i++) {
-    							if (accountInfo.charAt(i) == ',') {
-    								if (detailCounter == 2) {
-    									break;
-    								}
-    								accountDetails[detailCounter] = detail;
-    								detail = "";
-    								detailCounter++;
-    							}
-    							else {
-    								detail += accountInfo.charAt(i);
-    							}
-    						}
-    						accountDetails[detailCounter] = detail;
-    						detail = "";
-    						detailCounter++;
-    						if (register(accountDetails[0], accountDetails[1], Boolean.parseBoolean(accountDetails[2]))) {
-    							writeMessage(new Message("Registered","success","NA"));
-    						}
-    						else {
-    							informClientOfError(ErrorType.TypeError);
-    						}
-    					}
-    					else if (line.getType().compareTo("BalanceRequest") == 0) {
-	    					String playerBalance = String.valueOf(getPlayerBalance());
-	    					writeMessage(new Message("BalanceView","success", playerBalance));
-	    				}
-    					else if (line.getType().compareTo("DepositRequest") == 0) {
-	    					if (addToPlayerBalance(Double.parseDouble(line.getText()))) {
-	    						String playerBalance = String.valueOf(getPlayerBalance());
-	    						writeMessage(new Message("Deposit","success", playerBalance));
-	    					}
-	    					else {
-	    						informClientOfError(ErrorType.TypeError);
-	    					}
-	    				}
-	    				else if (line.getType().compareTo("WithdrawRequest") == 0) {
-	    					if (chargePlayerBalance(Double.parseDouble(line.getText()))) {
-	    						String playerBalance = String.valueOf(getPlayerBalance());
-	    						writeMessage(new Message("Withdraw","success", playerBalance));
-	    					}
-	    					else {
-	    						informClientOfError(ErrorType.TypeError);
-	    					}
-	    				}
-	    				else if (line.getType().compareTo("RequestBet") == 0) {	// Capitalize contents of text Message
-    						askForBets();
-    						writeMessage(new Message("Bet", "success", "Your wager is set"));
-    					}
-	    				else if (line.getType().compareTo("GameAction") == 0) {	// Capitalize contents of text Message
-    						askForAction();
-    					}
-	    				else if (line.getType().compareTo("RenderCard") == 0) {	// Capitalize contents of text Message
-    						getGameCards();
-    					}
-	    				else if (line.getType().compareTo("RenderPlayer") == 0) {	// Capitalize contents of text Message
-    						getGameUsers();
-    					}
-	    				else if (line.getType().compareTo("StartGame") == 0) {	// Capitalize contents of text Message
-	    					if (seatedAt.hasDealer() && seatedAt.getPlayerCount() > 0) {
-	    						seatedAt.startGame();
-	    					}
-	    					writeMessage(new Message("StartGame","success", "Game started"));
+    					else {
+    						informClientOfError(ErrorType.TypeError);
     					}
     				}
-    				else {	// Only listen for login TestMessages if client is not logged in
-    					if (line.getType().compareTo("login") == 0) {
-    						login = true;
-    						writeMessage(new Message("login","success","success"));
+    				else if (line.getType().compareTo("WithdrawRequest") == 0) {
+    					if (chargePlayerBalance(Double.parseDouble(line.getText()))) {
+    						String playerBalance = String.valueOf(getPlayerBalance());
+    						writeMessage(new Message("Withdraw","success", playerBalance));
+    					}
+    					else {
+    						informClientOfError(ErrorType.TypeError);
     					}
     				}
+    				else if (line.getType().compareTo("RequestBet") == 0) {	// Capitalize contents of text Message
+						askForBets();
+						writeMessage(new Message("Bet", "success", "Your wager is set"));
+					}
+    				else if (line.getType().compareTo("GameAction") == 0) {	// Capitalize contents of text Message
+						askForAction();
+					}
+    				else if (line.getType().compareTo("RenderCard") == 0) {	// Capitalize contents of text Message
+						getGameCards();
+					}
+    				else if (line.getType().compareTo("RenderPlayer") == 0) {	// Capitalize contents of text Message
+						getGameUsers();
+					}
+    				else if (line.getType().compareTo("StartGame") == 0) {	// Capitalize contents of text Message
+    					if (seatedAt.hasDealer() && seatedAt.getPlayerCount() > 0) {
+    						seatedAt.startGame();
+    					}
+    					writeMessage(new Message("StartGame","success", "Game started"));
+					}
     				collectMessage(line);
     			}
     		}
