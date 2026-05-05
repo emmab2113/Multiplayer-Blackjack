@@ -46,5 +46,65 @@ class CardDeckTest {
 		
 		assertTrue(expectedCards.isEmpty(), "The deck was missing the following cards: " + expectedCards);
 	}
+	
+	@Test
+	public void testShuffleChangesOrder() {
+		CardDeck unshuffledDeck = new CardDeck(1);
+		CardDeck shuffledDeck = new CardDeck(1);
+		
+		shuffledDeck.shuffle();
+		
+		List<String> unshuffledOrder = new ArrayList<>();
+		List<String> shuffledOrder = new ArrayList<>();
+		
+		Card uCard= unshuffledDeck.pullCard();
+		while (uCard != null) {
+			unshuffledOrder.add(uCard.getRank() + " " + uCard.getSuit());
+			uCard = unshuffledDeck.pullCard();
+		}
+		
+		Card sCard = shuffledDeck.pullCard();
+		while (sCard != null) {
+			shuffledOrder.add(sCard.getRank() + " " + sCard.getSuit());
+			sCard = shuffledDeck.pullCard();
+		}
+		
+		assertEquals (52, unshuffledOrder.size());
+		assertEquals (52, shuffledOrder.size());
+		assertNotEquals(unshuffledOrder, shuffledOrder, "The shuffled deck's order should not match the unshuffled deck.");
+	}
+	
+	@Test
+	public void testResetRestoresFullDeck() {
+		int maxDecks = 2;
+		CardDeck deck = new CardDeck(maxDecks);
+		
+		for (int i = 0; i < 15; i++) {
+			deck.pullCard();
+		}
+		
+		deck.reset();
+		
+		int cardsAfterReset = 0;
+		while (deck.pullCard() != null) {
+			cardsAfterReset++;
+		}
+		
+		assertEquals(52 * maxDecks, cardsAfterReset, "Resetting a 2-deck shoe should restore it to exactly 104 cards.");
+	}
+	
+	@Test
+	public void testAddMaxDecksIncreasesCapacity() {
+		CardDeck deck = new CardDeck(1);
+		
+		deck.addMaxDecks();
+		
+		int totalCards = 0;
+		while (deck.pullCard() != null); {
+			totalCards++;
+		}
+		
+		assertEquals(104, totalCards, "Calling addMaxDecks() on a 1-deck shoe should reset it as a 2-deck shoe (104 cards).");
+	}
 
 }
