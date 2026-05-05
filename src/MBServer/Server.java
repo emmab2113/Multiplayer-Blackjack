@@ -525,9 +525,12 @@ public class Server {
     			else {
     				score += Integer.parseInt(card.getRank());
     			}
+    			if (results.length() == 0) {
+    				results += ", ";
+    			}
+    			results += card.getRank() + card.getSuit();
     		}
-    		results += "Your hand has a score of " + score + "\n";
-    		results += "You have " + aces + " in your hand\n";
+
     		if (score > 21) {
 				while (aces > 0 && score > 21) {
 					score -= 10;
@@ -535,7 +538,7 @@ public class Server {
 				}
 				if (score > 21) {
 					stoodOrBust = true;
-					results += "You have busted";
+					results += "\nYou have busted";
 				}
 			}
     		writeMessage(new Message("Hit","success",results));
@@ -574,6 +577,7 @@ public class Server {
 				accountDetails[detailCounter] = detail;
 				detail = "";
 				detailCounter++;
+				// When this account is found, update timeOut and balance
 				if (account.getUsername().compareTo(accountDetails[0]) == 0) {
 					accountData = accountDetails[0] + "," + accountDetails[1] + ',' + accountDetails[2] + ",";
 					accountData += account.getBalance() + ",";
