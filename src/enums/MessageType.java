@@ -20,10 +20,13 @@ public enum MessageType {
 	GameAction,
 	Hit,
 	Stand,
-	RenderCard,
-	RenderPlayer,
+	Bust,
+	RenderCards,
+	RenderPlayers,
 	Connected,
 	Disconnected,
 	CancelRequest,
-	Test
+	Test,
+	StartGame,
+	Dealer
 }

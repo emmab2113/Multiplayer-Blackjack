@@ -5,6 +5,7 @@ public enum ErrorType {
 	InvalidCredentials,
 	CannotDeposit,
 	CannotWithdraw,
-	TimmedOut,
-	AlreadyLoggedIn
+	TimedOut,
+	AlreadyLoggedIn, 
+	TypeError
 }
