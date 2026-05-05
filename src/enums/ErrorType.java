@@ -7,5 +7,6 @@ public enum ErrorType {
 	CannotWithdraw,
 	TimedOut,
 	AlreadyLoggedIn,
-	TypeError
+	AlreadyAtTable,
+	AccountAlreadyExists
 }
