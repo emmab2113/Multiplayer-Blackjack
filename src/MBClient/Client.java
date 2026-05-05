@@ -13,6 +13,7 @@ import java.util.Vector;
 import enums.ErrorType;
 import enums.MessageStatus;
 import enums.MessageType;
+import message.Message;
 
 /*
  * CLIENT CLASS:
@@ -70,6 +71,7 @@ public class Client {
 	        outputStream = socket.getOutputStream();
 	        // create an ObjectOutputStream to send an object through outputStream
 			objectOutputStream = new ObjectOutputStream(outputStream);
+			objectOutputStream.flush();
 			
 	        // establish input stream from server
 	        // get input stream from connected socket
@@ -86,6 +88,7 @@ public class Client {
         
         // read response from server
         Message responseMessage = receive();
+        if (responseMessage == null) return false;
         
         // verify successful connection to server
         // (expecting Connected message back with Success status)
@@ -106,6 +109,7 @@ public class Client {
     	
     	// read response from server
     	Message responseMessage = receive();
+    	if (responseMessage == null) return false;
     	
     	// interpret response: verify successful login
     	if (responseMessage.getType() == MessageType.LogIn 
@@ -125,6 +129,7 @@ public class Client {
     	
     	// read response message from server
     	Message responseMessage = receive();
+    	if (responseMessage == null) return false;
     	
     	// interpret response: verify successful registry
     	if (responseMessage.getType() == MessageType.Register 
@@ -143,6 +148,7 @@ public class Client {
     	
     	// read response from server
     	Message responseMessage = receive();
+    	if (responseMessage == null) return false;
     	
     	// interpret response: verify successful logout
     	if (responseMessage.getType() == MessageType.LogOut 
@@ -161,6 +167,7 @@ public class Client {
 		
         // read response message from server
 		Message responseMessage = receive();
+		if (responseMessage == null) throw new IllegalStateException("invalid BalanceRequest response");
 		
 		// interpret response: verify balance successfully fetched
 		if (responseMessage.getType() == MessageType.BalanceView 
@@ -179,6 +186,7 @@ public class Client {
 		
         // read response message from server
 		Message responseMessage = receive();
+		if (responseMessage == null) throw new IllegalStateException("invalid DepositRequest response");
 		
 		// interpret response: verify balance successfully updated
 		if (responseMessage.getType() == MessageType.DepositBalance 
@@ -193,10 +201,11 @@ public class Client {
 	public double requestBalanceWithdrawal(Double currency) {
 		// send WithdrawRequest message to server
 		send(new Message(MessageType.WithdrawRequest, MessageStatus.Pending, 
-						 String.valueOf(currency)));
+						 String.valueOf(-currency)));
 		
         // read response message from server
 		Message responseMessage = receive();
+		if (responseMessage == null) throw new IllegalStateException("invalid WithdrawRequest response");
 		
 		// interpret response: verify balance successfully updated
 		if (responseMessage.getType() == MessageType.WithdrawBalance 
@@ -208,12 +217,13 @@ public class Client {
 		// throw exception if no balance received
 		throw new IllegalStateException("invalid WithdrawRequest response");
 	}
-	public boolean joinTable(String tableID) {
+	public boolean joinTable() {
 		// send TableJoin message to server
 		send(new Message(MessageType.TableJoin, MessageStatus.Pending));
 		
         // read response message from server
 		Message responseMessage = receive();
+		if (responseMessage == null) return false;
 		
 		// interpret response: verify table successfully joined
 		if (responseMessage.getType() == MessageType.TableJoin 
@@ -231,6 +241,7 @@ public class Client {
 		
         // read response message from server
 		Message responseMessage = receive();
+		if (responseMessage == null) return false;
 		
 		// interpret response: verify table successfully left
 		if (responseMessage.getType() == MessageType.TableLeave 
@@ -249,6 +260,7 @@ public class Client {
 		
         // read response message from server
 		Message responseMessage = receive();
+		if (responseMessage == null) return false;
 		
 		// interpret response: verify bet successfully received
 		if (responseMessage.getType() == MessageType.Bet 
@@ -267,34 +279,56 @@ public class Client {
 		// send Stand message to server
 		send(new Message(MessageType.Stand, MessageStatus.Pending));
 	}
+	public int getGameUsers() {
+		// send RenderPlayers message to server
+		send(new Message(MessageType.RenderPlayers, MessageStatus.Pending));
+		
+        // read response message from server
+		Message responseMessage = receive();
+		if (responseMessage == null) throw new IllegalStateException("invalid getGameUSers response");
+		
+		// interpret response: verify users returned
+		if (responseMessage.getType() == MessageType.Bet 
+			&& responseMessage.getStatus() == MessageStatus.Success) {
+			return countUsers(responseMessage.getText());
+		}
+		else {
+			throw new IllegalStateException("invalid getGameUSers response");
+		}
+	}
 	
 	// ==== PRIVATE METHODS ==== //
 	
 	private void send(Message msg) {
 		try {
 			objectOutputStream.writeObject(msg);
+			objectOutputStream.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	private Message receive() {
-		Message msg = new Message();
 		try {
-			msg = (Message) objectInputStream.readObject();
+			return (Message) objectInputStream.readObject();
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
+			return null;
 		}
-		return msg;
 	}	
+	private int countUsers(String usersStr) {
+		int numUsers = 0;
+		for (int i = 0; i < 6; i++) {
+			if (usersStr.charAt(i) == 1) {
+				numUsers++;
+			}
+		}
+		return numUsers;
+	}
 	
 	
-	// need timeout message sender for when player leaves middle of game
-	public void displayGameUsers() {}
 	public void displayGameCards() {}
 	public void displayGameStatus() {}
 	
-	public void displayError(ErrorType errorType) {} // ?
-	private void getIPAddress() {} // ?
 	
 	
 	

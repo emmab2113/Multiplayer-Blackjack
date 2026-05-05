@@ -2,6 +2,8 @@ package MBClient;
 
 public class BlackjackApp {
 	public static void main(String[] args) {
+		System.out.println("app started");
+		
 		// create Client and GUI instances
 		Client client = new Client();
 		GUI gui = new GUI(client);
@@ -15,6 +17,8 @@ public class BlackjackApp {
 			return;
 		}
         
+		System.out.println("successful socket connection, running gui");
+		
         // run gui
         gui.run();
 	}
