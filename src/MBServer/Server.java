@@ -243,6 +243,12 @@ public class Server {
 	    				else if (line.getType().compareTo("RenderPlayer") == 0) {	// Capitalize contents of text Message
     						getGameUsers();
     					}
+	    				else if (line.getType().compareTo("StartGame") == 0) {	// Capitalize contents of text Message
+	    					if (seatedAt.hasDealer() && seatedAt.getPlayerCount() > 0) {
+	    						seatedAt.startGame();
+	    					}
+	    					writeMessage(new Message("StartGame","success", "Game started"));
+    					}
     				}
     				else {	// Only listen for login TestMessages if client is not logged in
     					if (line.getType().compareTo("login") == 0) {
@@ -415,7 +421,7 @@ public class Server {
 						}
 					}
 					else {
-						informClientOfError(ErrorType.TypeError);
+						informClientOfError(ErrorType.CannotWithdraw);
 					}
 				}
 			} catch (IOException e) {
@@ -435,6 +441,13 @@ public class Server {
     		try {
     			Message line = new Message();
 				writeMessage(new Message("GameAction","success","Choose Hit or Stand"));
+				if (isDealer()) {	// Dealers turn is taken automatically
+					while (checkRanks() < standAt) {
+						hitRequest();
+					}
+					standRequest();
+					return;
+				}
 				if ((line = (Message) in.readObject()) != null) {
 					if (line.getType().compareTo("Stand") == 0) {
 						standRequest();

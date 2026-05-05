@@ -35,10 +35,8 @@ public class Table {
 				this.players[this.playersTurn].addCard(drawCard());
 			}
 		}
-		if (hasDealer()) {
-			this.dealer.addCard(drawCard());
-			this.dealer.addCard(drawCard());
-		}
+		this.dealer.addCard(drawCard());
+		this.dealer.addCard(drawCard());
 		this.timer = 42;
 	}
 	
