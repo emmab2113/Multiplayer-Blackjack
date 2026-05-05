@@ -505,11 +505,13 @@ public class Server {
     		String allCards = "";
     		Vector<Card>[] drawnCards = seatedAt.getCardsDrawn();
     		for (int i = 0; i < drawnCards.length; i++) {
-    			allCards += ":" + i + ":";
-    			for (Card card: drawnCards[i]){
-        			allCards += card.getSuit();
-        			allCards += card.getRank();
-        			allCards += ",";
+    			if (drawnCards[i]!= null) {
+    				allCards += ":" + i + ":";
+        			for (Card card: drawnCards[i]){
+            			allCards += card.getSuit();
+            			allCards += card.getRank();
+            			allCards += ",";
+        			}
     			}
     		}
     		writeMessage(new Message("RenderCard","success",allCards));
