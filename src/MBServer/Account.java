@@ -30,6 +30,21 @@ public class Account {
 		this.credentials = credentials;
 		this.balance = balance;
 		this.timeOut = timeOut;
+		if (this.timeOut > 0) {
+			ExecutorService executor = Executors.newSingleThreadExecutor();
+			executor.execute(() -> 
+			{
+				try {
+					while (timeOut > 0) {
+						Thread.sleep(1000);
+						this.timeOut--;
+					}
+				} catch (InterruptedException e) {
+					
+				}
+			});
+			executor.shutdown();
+		}
 		cards = new Vector<Card>();
 		activeBet = 0;
 		signedIn = false;
@@ -105,6 +120,9 @@ public class Account {
 		return balance;
 	}
 	public boolean signOut() {
+		if (!signedIn) {
+			return false;
+		}
 		signedIn = false;
 		return true;
 	}
