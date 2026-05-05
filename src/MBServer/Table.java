@@ -31,9 +31,15 @@ public class Table {
 		
 		for (Server.ClientHandler player : players) {
 			if (player != null) {
-				player.askForBets();
+				player.getGameUsers();
+				player.addCard(drawCard());
+				player.addCard(drawCard());
 			}
 		}
+		this.dealer.getGameUsers();
+		this.dealer.addCard(drawCard());
+		this.dealer.addCard(drawCard());
+		this.timer = 42;
 	}
 	
 	public void nextTurn () {
@@ -65,6 +71,12 @@ public class Table {
 		if (pulled != null) {
 			this.cardsDrawn.add(pulled);
 		}
+		for (Server.ClientHandler player : this.players) {
+			if (player != null) {
+				player.getGameCards();
+			}
+		}
+		this.dealer.getGameCards();
 		return pulled;
 	}
 	
@@ -118,11 +130,20 @@ public class Table {
 		}
 		
 		for (int i = 0; i < players.length; i++) {
-			if (players[i] == user) {
-				players[i] = null;
-				break;
+			if (user == this.players[i]) {
+				if (this.gameActive) {
+					this.players[i].timeOut();
+				}
+				this.players[i] = null;
+				return;
 			}
 		}
+		for (Server.ClientHandler player : this.players) {
+			if (player != null) {
+				player.getGameUsers();
+			}
+		}
+		this.dealer.getGameUsers();
 	}
 
 	public boolean[] getVacancies() {
@@ -137,8 +158,41 @@ public class Table {
 		return this.cardsDrawn;
 	}
 	
+	public Vector<Card>[] getAllUsersHands() {
+		Vector<Card>[] allUsersHands = new Vector[7];
+		for (int i = 0; i < this.players.length; i++) {
+			if (this.players[i] != null) {
+				allUsersHands[i] = this.players[i].getHand();
+			}
+		}
+		if (hasDealer()) {
+			allUsersHands[6] = this.dealer.getHand();
+		}
+		return allUsersHands;
+	}
+	
 	public void playerStoodOrBust() {
 		this.playersTurn++;
 		nextTurn();
+	}
+	
+	public void dealerCancelledGame() {
+		this.gameActive = false;
+		
+		for (int i = 0; i < this.players.length; i++) {
+			if (this.players[i] != null) {
+				removeUserFromTable(this.players[i]);
+			}
+		}
+		
+		if (this.dealer != null) {
+			removeUserFromTable(this.dealer);
+		}
+		
+		this.shoe.reset();
+		this.shoe.shuffle();
+		this.cardsDrawn.clear();
+		this.timer = 0;
+		this.playersTurn = 0;
 	}
 }

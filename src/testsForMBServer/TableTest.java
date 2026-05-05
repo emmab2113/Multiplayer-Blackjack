@@ -75,6 +75,21 @@ class TableTest {
 		}
 		
 		@Override
+		public void getGameUsers() {
+			
+		}
+		
+		@Override
+		public void getGameCards() {
+			
+		}
+		
+		@Override
+		public int checkRanks() {
+			return 0;
+		}
+		
+		@Override
 		public boolean getStoodOrBust() {
 			return this.stoodOrBustOverride;
 		}
@@ -97,6 +112,10 @@ class TableTest {
 	@Test
 	public void drawCardTest() {
 		Table testTable = new Table();
+		MockClientHandler dealerMock = createMockClient();
+		dealerMock.setIsDealer(true);
+		testTable.addUserToTable(dealerMock);
+
 		testTable.startGame();
 		assertNotNull(testTable.drawCard());
 	}
@@ -192,6 +211,11 @@ class TableTest {
 	@Test
 	public void testGetVacancies() {
 		Table table = new Table();
+		
+		MockClientHandler dealerMock = createMockClient();
+		dealerMock.setIsDealer(true);
+		table.addUserToTable(dealerMock);
+		
 		MockClientHandler playerMock1 = createMockClient();
 		MockClientHandler playerMock2 = createMockClient();
 		
@@ -200,11 +224,11 @@ class TableTest {
 		
 		boolean[] vacancies = table.getVacancies();
 		
-		assertEquals(6, vacancies.length, "Vacancies array should  match the player seat limit (6).");
+		assertEquals(5, vacancies.length, "Vacancies array should  match the player seat limit (5).");
 		assertFalse(vacancies[0], "Seat 0 should be occupied (false).");
 		assertFalse(vacancies[1], "Seat 1 should be occupied (false).");
 		assertTrue(vacancies[2], "Seat 2 should be vacant (true).");
-		assertTrue(vacancies[5], "Seat 5 should be vacant (true).");
+		assertTrue(vacancies[4], "Seat 4 should be vacant (true).");
 	}
 	
 	@Test
