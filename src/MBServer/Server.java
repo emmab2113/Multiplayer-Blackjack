@@ -479,6 +479,10 @@ public class Server {
     		account.receiveCard(card);
     	}
     	
+    	public void restartGame() {
+    		account.resetCardsAndBet();
+    	}
+    	
     	public void restartGame(boolean payOut) {
     		account.resetCardsAndBet(payOut);
     	}
@@ -619,6 +623,12 @@ public class Server {
     	
     	public boolean isDealer() {
     		return account.getCredentials();
+    	}
+    	
+    	public void cancelGame() {
+    		if (isDealer()) {
+    			seatedAt.dealerCancelledGame();
+    		}
     	}
     }
 }

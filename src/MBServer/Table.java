@@ -146,4 +146,18 @@ public class Table {
 		this.playersTurn++;
 		nextTurn();
 	}
+	
+	public void dealerCancelledGame() {
+		gameActive = false;
+		for (Server.ClientHandler player: this.players) {
+			if (player != null) {
+				player.restartGame(false);
+				player.removeFromTable();
+				removeUserFromTable(player);
+			}
+		}
+		dealer.restartGame();
+		dealer.removeFromTable();
+		removeUserFromTable(dealer);
+	}
 }

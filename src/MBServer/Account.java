@@ -69,9 +69,16 @@ public class Account {
 		}
 		return false;
 	}
+	
+	public void resetCardsAndBet() {
+		activeBet = 0;
+		cards.clear();
+	}
+	
 	public void resetCardsAndBet(boolean payOut) {
+		modifyBalance(activeBet);
 		if (payOut) {
-			modifyBalance(activeBet * 2);
+			modifyBalance(activeBet);
 		}
 		activeBet = 0;
 		cards.clear();
