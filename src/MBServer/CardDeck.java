@@ -10,6 +10,7 @@ public class CardDeck {
 	public CardDeck(int cardMaxDeck) {
 		this.maxDecks = cardMaxDeck;
 		this.Cards = new Vector<Card>();
+		reset();
 	}
 	
 	public void shuffle() {

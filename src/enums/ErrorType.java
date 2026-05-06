@@ -8,4 +8,7 @@ public enum ErrorType {
 	TimedOut,
 	AlreadyLoggedIn, 
 	TypeError
+	AlreadyLoggedIn,
+	AlreadyAtTable,
+	AccountAlreadyExists
 }
