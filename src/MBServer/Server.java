@@ -1,4 +1,5 @@
 package MBServer;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -107,7 +108,7 @@ public class Server {
     	//protected ClientHandler() {
 			//this.clientSocket = null;
 			// Don't initialize streams or anything else
-		}
+		//}
 
     	// Constructor to receive client connection
     	public ClientHandler(Socket socket) throws IOException
@@ -410,34 +411,34 @@ public class Server {
     	
     	public void informClientOfError(ErrorType errorType) { // Informs client of error in processing an action
     		if (errorType == ErrorType.AlreadyAtTable) { // TableJoin fail
-				writeMessage(new Message("Error","failure","You cannot join another table until you leave your current one"));
+				writeMessage(new Message(MessageType.Error, MessageStatus.Fail, "You cannot join another table until you leave your current one"));
 			}
     		if (errorType == ErrorType.AccountAlreadyExists) { // Register fail
-				writeMessage(new Message("Error","failure","Account already exists in the register"));
+				writeMessage(new Message(MessageType.Error, MessageStatus.Fail,"Account already exists in the register"));
 			}
     		if (errorType == ErrorType.InvalidUsernameOrPassword) { // LogIn fail
-				writeMessage(new Message("Error","failure","Either your username or password was incorrect"));
+				writeMessage(new Message(MessageType.Error, MessageStatus.Fail,"Either your username or password was incorrect"));
 			}
     		else if (errorType == ErrorType.TimedOut) { // TableJoin fail due to being timed out
-    			writeMessage(new Message("Error","failure", "Seconds remaining for timeout: " + account.getTimeOut()));
+    			writeMessage(new Message(MessageType.Error, MessageStatus.Fail, "Seconds remaining for timeout: " + account.getTimeOut()));
     		}
     		else if (errorType == ErrorType.CannotDeposit) { // Deposit fail
-    			writeMessage(new Message("Error","failure", "You cannot deposit this amount: " + account.getBalance()));
+    			writeMessage(new Message(MessageType.Error, MessageStatus.Fail, "You cannot deposit this amount: " + account.getBalance()));
     		}
     		else if (errorType == ErrorType.CannotWithdraw) { // Withdraw fail
-    			writeMessage(new Message("Error","failure", "You have insufficient funds: " + account.getBalance()));
+    			writeMessage(new Message(MessageType.Error, MessageStatus.Fail, "You have insufficient funds: " + account.getBalance()));
     		}
     		else { // Generic fail-safe error
-    			writeMessage(new Message("Error","failure","Error: cannot process action"));
+    			writeMessage(new Message(MessageType.Error, MessageStatus.Fail,"Error: cannot process action"));
     		}
     	}
     	
     	public void askForBets() { // Ask player for bets and attempt to process it
     		try {
     			Message line = new Message(); // Record of player response
-				writeMessage(new Message("RequestBet","success","Place your bets")); // Ask for bets
+				writeMessage(new Message(MessageType.RequestBet,MessageStatus.Success,"Place your bets")); // Ask for bets
 				while ((line = (Message) in.readObject()) != null) { // Repeatedly ask until valid response
-					if (line.getType().compareTo("Bet") == 0) {
+					if (line.getType() == MessageType.Bet) {
 						if (account.setBet(Double.parseDouble(line.getText()))) { // Reinterpret and set player's bet
 							return;
 						}
