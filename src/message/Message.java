@@ -14,7 +14,7 @@ public class Message implements Serializable {
     public Message() {
         this.type = MessageType.Test;
         this.status = MessageStatus.Test;
-        this.text = "Undefined";
+        this.text = "";
     }
     
     public Message(MessageType type, MessageStatus status) {
