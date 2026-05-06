@@ -69,7 +69,7 @@ public class Driver {
         			expectMessage = true;
         		}
         		else if (clientCom.compareTo("LogIn") == 0) {
-        			objectOutputStream.writeObject(new Message("LogIn","pending","player123,password,0"));
+        			objectOutputStream.writeObject(new Message("LogIn","pending","playerEpic,password,0"));
         			expectMessage = true;
         		}
         		else if (clientCom.compareTo("Register") == 0) {
