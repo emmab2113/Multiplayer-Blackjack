@@ -1,3 +1,5 @@
+package MBServer;
+
 public class Card {
 	
 	// Fields:

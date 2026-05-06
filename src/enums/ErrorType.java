@@ -6,6 +6,8 @@ public enum ErrorType {
 	CannotDeposit,
 	CannotWithdraw,
 	TimedOut,
+	AlreadyLoggedIn, 
+	TypeError
 	AlreadyLoggedIn,
 	AlreadyAtTable,
 	AccountAlreadyExists

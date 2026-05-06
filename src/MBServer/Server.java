@@ -1,5 +1,6 @@
 package MBServer;
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
@@ -7,6 +8,8 @@ import java.util.Scanner;
 import java.util.Vector;
 
 import enums.ErrorType;
+import enums.MessageStatus;
+import enums.MessageType;
 import message.Message;
 import MBClient.Client;
 
@@ -53,19 +56,22 @@ public class Server {
 						Double.parseDouble(accountDetails[3]),Integer.parseInt(accountDetails[4])));
 			}
 			
-			// Server is listening on port 1234
-			server = new ServerSocket(1234);
+			// server is listening on port 1234
+			server = new ServerSocket();
 			server.setReuseAddress(true);
+			server.bind(new InetSocketAddress(1234));
 
-			// Running infinite loop for getting
-			// Client request
+			System.out.println("server listening");
+			
+			// running infinite loop for getting
+			// client request
 			while (true) {
 
-				// Socket object to receive incoming client
-				// Requests
+				// socket object to receive incoming client
+				// requests
 				Socket client = server.accept();
 
-				// Create a new thread object
+				// create a new thread object
 				ClientHandler clientSock
 					= new ClientHandler(client);
 
@@ -98,8 +104,8 @@ public class Server {
     	private Table seatedAt;
 
     	// ADD THIS FOR TESTING PURPOSES ONLY
-    	protected ClientHandler() {
-			this.clientSocket = null;
+    	//protected ClientHandler() {
+			//this.clientSocket = null;
 			// Don't initialize streams or anything else
 		}
 
@@ -108,15 +114,15 @@ public class Server {
     	{
     		this.clientSocket = socket;	
     		
-    		// get the outputstream and inputstream of client
+    		// establish both out streams first
 			OutputStream outBase = clientSocket.getOutputStream();
-			InputStream inBase = clientSocket.getInputStream();
-			
-			// Create object streams so we can read and write Messages to client.
 			out = new ObjectOutputStream(outBase);
-	        in = new ObjectInputStream(inBase);
+			
+			// then establish both in streams
+			InputStream inBase = clientSocket.getInputStream();
+			in = new ObjectInputStream(inBase);
 	        
-	        out.writeObject(new Message("Connected","success","NA"));
+	        System.out.println("client connected");
     	}
 
     	// Run on instantiation
@@ -127,33 +133,32 @@ public class Server {
 
     	        // Communicate until client connection is severed
     			Message line;
-    			while ((line = (Message) in.readObject()) != null) { // Act based on user input
-    				if (line.getType().compareTo("LogOut") == 0) {	// Log user out of account
+    			while ((line = (Message) in.readObject()) != null) {
+    				if (line.getType() == MessageType.Connected){
+    					out.writeObject(new Message(MessageType.Connected, MessageStatus.Success));
+    					out.flush();
+    				}
+    				else if (line.getType() == MessageType.LogOut) {	// Sever client connection on logout
 						account.signOut();
 						save();
 						account = null;
-						writeMessage(new Message("LogOut","success","NA"));
+						out.writeObject(new Message(MessageType.LogOut, MessageStatus.Success));
+						out.flush();
 					}
-					else if (line.getType().compareTo("text") == 0) {	// Capitalize contents of text Message (Driver fail-safe)
-						String capitalInput = line.getText();			// Return capitalized text to client
-						capitalInput = capitalInput.toUpperCase();
-						writeMessage(new Message("text","success",capitalInput));
-						
-					}
-					else if (line.getType().compareTo("TableJoin") == 0) {	// Look for and join table if not already at one
+					else if (line.getType() == MessageType.TableJoin) {	// Capitalize contents of text Message
 						if (seatedAt == null) {
 							lookForTable();
 						}
 						else {
-							informClientOfError(ErrorType.AlreadyAtTable);	// Inform user they're already seated
+							informClientOfError(ErrorType.TypeError);
 						}
 					}
-					else if (line.getType().compareTo("TableLeave") == 0) {	// Remove user from table
+					else if (line.getType() == MessageType.TableLeave) {	// Capitalize contents of text Message
 						removeFromTable();
 					}
-					else if (line.getType().compareTo("LogIn") == 0) {	// Log user into account
+					else if (line.getType() == MessageType.LogIn) {	// Capitalize contents of text Message
 						String accountInfo = line.getText();
-						String[] accountDetails = new String[3]; // Decipher message contents
+						String[] accountDetails = new String[3];
 						int detailCounter = 0;
 						String detail = "";
 						for (int i = 0; i < accountInfo.length(); i++) {
@@ -170,20 +175,21 @@ public class Server {
 						detail = "";
 						detailCounter++;
 						if(logIn(accountDetails[0], accountDetails[1], Boolean.parseBoolean(accountDetails[2]))) {
-							writeMessage(new Message("LogIn","success","NA")); // Log in if details are correct
+							out.writeObject(new Message(MessageType.LogIn, MessageStatus.Success));
+							out.flush();
 						}
 						else {
-							informClientOfError(ErrorType.InvalidUsernameOrPassword); // Inform client of incorrect details
+							informClientOfError(ErrorType.TypeError);
 						}
 					}
-					else if (line.getType().compareTo("TimeOut") == 0) {	// Time out user
+					else if (line.getType() == MessageType.TimeOut) {	// Capitalize contents of text Message
 						if (account.isTimedOut()) {
 							informClientOfError(ErrorType.TimedOut);
 						}
 						timeOut();
-						writeMessage(new Message("text","success","Time out started"));
+						writeMessage(new Message(MessageType.TimeOut, MessageStatus.Success));
 					}
-					else if (line.getType().compareTo("Register") == 0) {	// Register new account for user
+					else if (line.getType() == MessageType.Register) {	// Capitalize contents of text Message
 						String accountInfo = line.getText();
 						String[] accountDetails = new String[3];
 						int detailCounter = 0;
@@ -205,52 +211,52 @@ public class Server {
 						detail = "";
 						detailCounter++;
 						if (register(accountDetails[0], accountDetails[1], Boolean.parseBoolean(accountDetails[2]))) {
-							writeMessage(new Message("Registered","success","NA")); // Register account if account doesn't yet exist
+							writeMessage(new Message(MessageType.Register, MessageStatus.Success)); // Register account if account doesn't yet exist
 						}
 						else {
-							informClientOfError(ErrorType.AccountAlreadyExists); // Inform user account already exists
+							informClientOfError(ErrorType.TypeError); // Inform user account already exists
 						}
 					}
-					else if (line.getType().compareTo("BalanceRequest") == 0) { // Show user their balance
+					else if (line.getType() == MessageType.BalanceRequest) { // Show user their balance
     					String playerBalance = String.valueOf(getPlayerBalance()); // Put balance in string
-    					writeMessage(new Message("BalanceView","success", playerBalance)); // Deliver balance to user
+    					writeMessage(new Message(MessageType.BalanceView, MessageStatus.Success, playerBalance)); // Deliver balance to user
     				}
-					else if (line.getType().compareTo("DepositRequest") == 0) { // Deposit into user balance
+					else if (line.getType() == MessageType.DepositRequest) { // Deposit into user balance
     					if (addToPlayerBalance(Double.parseDouble(line.getText()))) { // Reinterpret message contents and try to deposit it
     						String playerBalance = String.valueOf(getPlayerBalance()); // Put new balance in string
-    						writeMessage(new Message("Deposit","success", playerBalance)); // Deliver new balance to user
+    						writeMessage(new Message(MessageType.DepositBalance, MessageStatus.Success, playerBalance)); // Deliver new balance to user
     					}
     					else {
-    						informClientOfError(ErrorType.CannotDeposit); // Inform user they cannot deposit that amount
+    						informClientOfError(ErrorType.TypeError); // Inform user they cannot withdraw that amount
     					}
     				}
-    				else if (line.getType().compareTo("WithdrawRequest") == 0) { // Withdraw from user balance
+    				else if (line.getType() == MessageType.WithdrawRequest) { // Withdraw from user balance
     					if (chargePlayerBalance(Double.parseDouble(line.getText()))) { // Reinterpret message contents and try to withdraw it
     						String playerBalance = String.valueOf(getPlayerBalance()); // Put new balance in string
-    						writeMessage(new Message("Withdraw","success", playerBalance)); // Deliver new balance to user
+    						writeMessage(new Message(MessageType.WithdrawBalance, MessageStatus.Success, playerBalance)); // Deliver new balance to user
     					}
     					else {
-    						informClientOfError(ErrorType.CannotWithdraw); // Inform user they cannot withdraw that amount
+    						informClientOfError(ErrorType.TypeError); // Inform user they cannot withdraw that amount
     					}
     				}
-    				else if (line.getType().compareTo("RequestBet") == 0) {	// Set bet for user
+    				else if (line.getType() == MessageType.RequestBet) {	// Set bet for user
 						askForBets(); // Ask user for bets and set it
-						writeMessage(new Message("Bet", "success", "Your wager is set")); // Inform user that bet is set
+						writeMessage(new Message(MessageType.Bet, MessageStatus.Success)); // Inform user that bet is set
 					}
-    				else if (line.getType().compareTo("GameAction") == 0) {	// Ask user to hit or stand
+    				else if (line.getType() == MessageType.GameAction) {	// Ask user to hit or stand
 						askForAction(); // Ask user to hit or stand and act accordingly
 					}
-    				else if (line.getType().compareTo("RenderCard") == 0) {	// Send user info on cards used
+    				else if (line.getType() == MessageType.RenderCards) {	// Send user info on cards used
 						getGameCards();
 					}
-    				else if (line.getType().compareTo("RenderPlayer") == 0) {	// Send user info on players at table
+    				else if (line.getType() == MessageType.RenderPlayers) {	// Send user info on players at table
 						getGameUsers();
 					}
-    				else if (line.getType().compareTo("StartGame") == 0) {	// Start game at table
+    				else if (line.getType() == MessageType.StartGame) {	// Start game at table
     					if (seatedAt.hasDealer() && seatedAt.getPlayerCount() > 0) { // Verify game can start
     						seatedAt.startGame();
     					}
-    					writeMessage(new Message("StartGame","success", "Game started")); // Inform user that a game has started
+    					writeMessage(new Message(MessageType.StartGame, MessageStatus.Success));
 					}
     				collectMessage(line); // Log message sent by user
     			}
@@ -336,7 +342,7 @@ public class Server {
     				}
     			}
     		}
-    		writeMessage(new Message ("TableJoin", "success", "NA")); // Tell user they joined table
+    		writeMessage(new Message(MessageType.TableJoin, MessageStatus.Success)); // Tell user they joined table
     	}
     	
     	public synchronized void makeTable() { // Add a new table
@@ -450,22 +456,22 @@ public class Server {
     	public void removeFromTable() { // Remove user from table
     		seatedAt.queueLeave(this); // Have table remove user from it first
     		seatedAt = null; // Sever connection to table
-    		writeMessage(new Message ("TableLeave", "success", "NA")); // Tell user they left the table
+    		writeMessage(new Message(MessageType.TableLeave, MessageStatus.Success)); // Tell user they left the table
     	}
     	
     	public void askForAction() { // Ask user for game action and process response
     		try {
     			Message line = new Message(); // Record of player response
-				writeMessage(new Message("GameAction","success","Choose Hit or Stand")); // Ask user for game action
+				writeMessage(new Message(MessageType.GameAction, MessageStatus.Pending)); // Ask user for game action
 				if ((line = (Message) in.readObject()) != null) { // Wait for user to respond
-					if (line.getType().compareTo("Stand") == 0) { // Player chooses to stand
+					if (line.getType() == MessageType.Stand) { // Player chooses to stand
 						standRequest();
 					}
-					if (line.getType().compareTo("Hit") == 0) { // Player chooses to hit
+					if (line.getType() == MessageType.Hit) { // Player chooses to hit
 						hitRequest();
 					}
-					if (line.getType().compareTo("Dealer") == 0) { // Dealer's turn is taken automatically
-						if (isDealer()) {
+					if (line.getType() == MessageType.Dealer) {
+						if (isDealer()) {	// Dealers turn is taken automatically
 							while (checkRanks() < standAt) {
 								hitRequest();
 							}
@@ -488,7 +494,7 @@ public class Server {
     	
     	public void standRequest() { // Stand
     		stoodOrBust = true;
-    		writeMessage(new Message("Hit","success","You have stood")); // Tell user they have stood
+    		//writeMessage(new Message("Hit","success","You have stood")); // Tell user they have stood
     	}
     	
     	public void addCard(Card card) { // Add card to user's hand
@@ -514,7 +520,7 @@ public class Server {
     				seatedUsers += "1";
     			}
     		}
-    		writeMessage(new Message("RenderPlayer","success",seatedUsers)); // Tell client to render users
+    		writeMessage(new Message(MessageType.RenderPlayers, MessageStatus.Success, seatedUsers)); // Tell client to render users
     	}
     	
     	public void getGameCards() { // Get all cards drawn during a game for GUI to render them
@@ -530,11 +536,10 @@ public class Server {
         			}
     			}
     		}
-    		writeMessage(new Message("RenderCard","success",allCards)); // Tell client to render cards
+    		writeMessage(new Message(MessageType.RenderCards, MessageStatus.Success,allCards)); // Tell client to render cards
     	}
     	
     	public int checkRanks() { // Check ranks of hand and return score
-    		// Prepare the check
     		int aces = 0;
     		int score = 0;
     		String curRank = "";
@@ -569,11 +574,13 @@ public class Server {
 					results += "\nYou have busted";
 				}
 			}
-    		writeMessage(new Message("Hit","success",results)); // Tell user what cards they have
+    		writeMessage(new Message(MessageType.Hit, MessageStatus.Success, results)); // Tell user what cards they have
+    		//writeMessage(new Message(MessageType.Bust, MessageStatus.Success, results));
 			return score; // Return score
     	}
     	
-    	public synchronized void save() { // Prepare to save account info to registry
+    	public synchronized void save() {
+    		// Prepare to save account info to registry
     		File registryFile = new File("accounts.txt");
 			Scanner registryLoader = null;
 			BufferedWriter registryUpdater = null;
