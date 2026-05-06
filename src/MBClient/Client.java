@@ -285,7 +285,7 @@ public class Client {
 		if (responseMessage == null) throw new IllegalStateException("invalid getGameUSers response");
 		
 		// interpret response: verify users returned
-		if (responseMessage.getType() == MessageType.Bet 
+		if (responseMessage.getType() == MessageType.RenderPlayers 
 			&& responseMessage.getStatus() == MessageStatus.Success) {
 			return countUsers(responseMessage.getText());
 		}
